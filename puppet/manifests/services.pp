@@ -32,7 +32,7 @@ class portauthority::services (
 
     docker::run { "pa-registrator":
       image => "prozeta/pa-registrator",
-      command => "etcd://${floating_ip}:2379/services",
+      env => [ "ETCD_HOST=${floating_ip}", "PUBLISH_IP=${host_ip}" ],
       use_name => true,
       volumes => [ "/var/run/docker.sock:/tmp/docker.sock" ],
       require => Docker::Run["pa-logger"],
@@ -52,7 +52,7 @@ class portauthority::services (
 
     docker::run { "pa-registrator":
       image => "prozeta/pa-registrator",
-      env => [ "ETCD_HOST=${host_ip}" ],
+      env => [ "ETCD_HOST=${host_ip}", "PUBLISH_IP=${host_ip}" ],
       use_name => true,
       volumes => [ "/var/run/docker.sock:/tmp/docker.sock" ],
       require => Docker::Run["pa-logger"],

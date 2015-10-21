@@ -1,0 +1,20 @@
+{
+  "name": "prozeta/portauthority",
+  "version": "0.0.1",
+  "author": "Radek blufor Slavicinsky",
+  "license": "GPL-2.0",
+  "summary": "Puppet module to bootstrap Port Authority",
+  "source": "https://github.com/prozeta/port-authority",
+  "project_page": "https://github.com/prozeta/port-authority",
+  "issues_url": "https://github.com/prozeta/port-authority/issues",
+  "tags": ["docker", "PaaS", "etcd"],
+  "operatingsystem_support": [
+    {
+    "operatingsystem": "Ubuntu",
+    "operatingsystemrelease": [ "14.04" ]
+    }
+   ],
+  "dependencies": [
+    { "name": "gareth/docker", "version_requirement": ">=4.1.0" }
+  ]
+}

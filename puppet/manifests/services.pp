@@ -58,4 +58,6 @@ class portauthority::services (
       require  => Docker::Run['pa-logger'],
     }
 
+  }
+
 }

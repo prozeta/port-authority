@@ -6,6 +6,7 @@
 #
 # [*cluster_enabled*]
 # [*cluster_members*]
+# [*private_registry*]
 # [*log_destination*]
 # [*host_ip*]
 # [*floating_ip*]
@@ -29,6 +30,7 @@
 class portauthority (
   $cluster_enabled = false,
   $cluster_members = [],
+  $private_registry = '',
   $log_destination = '',
   $host_ip = $::ipaddress_eth0,
   $floating_ip,
@@ -38,9 +40,13 @@ class portauthority (
   $logger_tag = 'latest',
   $registartor_tag = 'latest',
 ) {
+  $private_registry != '' ? $registry_cfg = "--insecure_registry ${private_registry}'" : $private_registry = ''
+
+
+  $registry =
   class { 'docker':
     dns              => $portauthority::dns,
-    extra_parameters => "--bip ${portauthority::docker_bridge_ip}",
+    extra_parameters => "${private_registry} --bip ${portauthority::docker_bridge_ip}",
     tcp_bind         => "tcp://${portauthority::host_ip}:4243",
   } ->
 

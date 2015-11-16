@@ -40,7 +40,7 @@ class portauthority (
   $logger_tag = 'latest',
   $registartor_tag = 'latest',
 ) {
-  $private_registry != '' ? $registry_cfg = "--insecure_registry ${private_registry}'" : $private_registry = ''
+  $private_registry != '' ? $registry_cfg = "--insecure_registry ${private_registry}" : $private_registry = ''
 
 
   $registry =

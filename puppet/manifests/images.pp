@@ -3,7 +3,7 @@
 class portauthority::images (
   $etcd_tag,
   $logger_tag,
-  $registartor_tag,
+  $registrator_tag,
 ) {
 
   docker::image { 'prozeta/pa-etcd':

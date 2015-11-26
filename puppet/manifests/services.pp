@@ -22,7 +22,7 @@ class portauthority::services (
 
     docker::run { 'pa-etcd':
       image    => 'prozeta/pa-etcd',
-      env      => [ 'CLUSTER_ENABLED=true', "ETCD_HOSTNAME=${::fqdn}" , "HOST_IP=${host_ip}", "PEERS=${etcd_peers}" ],
+      env      => [ 'CLUSTER_ENABLED=true', "ETCD_HOSTNAME=${::hostname}" , "HOST_IP=${host_ip}", "PEERS=${etcd_peers}" ],
       ports    => [ '2379:2379', '2380:2380', '4001:4001', '7001:7001' ],
       use_name => true,
       hostname => "etcd-${::hostname}",

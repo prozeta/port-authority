@@ -41,7 +41,7 @@ class portauthority (
   $registrator_tag = 'latest',
 ) {
   if $portauthority::private_registry != '' {
-    $registry_cfg = "--insecure_registry ${private_registry} "
+    $registry_cfg = "--insecure-registry ${private_registry} "
   } else {
     $registry_cfg = ''
   }

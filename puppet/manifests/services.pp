@@ -13,7 +13,7 @@ class portauthority::services (
   docker::run { 'pa-logger':
     image    => 'prozeta/pa-logger',
     env      => [ "LOG_DESTINATION=${log_destination}" ],
-    ports    => [ '8888:8000' ],
+    ports    => [ '8888:80' ],
     use_name => true,
     volumes  => [ '/var/run/docker.sock:/tmp/docker.sock' ],
   }

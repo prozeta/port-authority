@@ -40,13 +40,15 @@ class portauthority (
   $logger_tag = 'latest',
   $registartor_tag = 'latest',
 ) {
-  $private_registry != '' ? $registry_cfg = "--insecure_registry ${private_registry}" : $private_registry = ''
+  if $portauthority::private_registry != '' {
+    $registry_cfg = "--insecure_registry ${private_registry} "
+  } else {
+    $registry_cfg = ''
+  }
 
-
-  $registry =
   class { 'docker':
     dns              => $portauthority::dns,
-    extra_parameters => "${private_registry} --bip ${portauthority::docker_bridge_ip}",
+    extra_parameters => "${registry_cfg} --bip ${portauthority::docker_bridge_ip}",
     tcp_bind         => "tcp://${portauthority::host_ip}:4243",
   } ->
 

@@ -11,8 +11,8 @@ class portauthority::services (
   $etcd_peers = inline_template('<%= @cluster_members.map { |host| host.split(".").first + "=http://" + host + ":2380" }.join(",") %>')
 
   docker::run { 'pa-logger':
-    image    =>  'prozeta/pa-logger',
-    command  =>  $log_destination,
+    image    => 'prozeta/pa-logger',
+    env      => [ "LOG_DESTINATION=${log_destination}" ],
     ports    => [ '8888:80' ],
     use_name => true,
     volumes  => [ '/var/run/docker.sock:/tmp/docker.sock' ],

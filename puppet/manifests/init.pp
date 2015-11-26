@@ -38,7 +38,7 @@ class portauthority (
   $dns = ['8.8.8.8', '4.4.4.4'],
   $etcd_tag = 'latest',
   $logger_tag = 'latest',
-  $registartor_tag = 'latest',
+  $registrator_tag = 'latest',
 ) {
   if $portauthority::private_registry != '' {
     $registry_cfg = "--insecure_registry ${private_registry} "

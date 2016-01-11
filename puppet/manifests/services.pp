@@ -9,7 +9,7 @@ class portauthority::services (
 ) {
 
   $etcd_peers = inline_template('<%= @cluster_members.map { |host| host.split(".").first + "=http://" + host + ":2380" }.join(",") %>')
-  $etcd_hosts = inline_template('<%= @cluster_members.join(",") %>')
+  $etcd_hosts = inline_template('<%= @cluster_members.join("\n") %>')
 
   docker::run { 'pa-logger':
     image    => 'prozeta/pa-logger',

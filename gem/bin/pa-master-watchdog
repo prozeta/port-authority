@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'port-authority/watchdog/master'
+PortAuthority::Watchdog::Master.new.run

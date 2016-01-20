@@ -1,24 +1,25 @@
 # = Class: portauthority::images
 #
-class portauthority::images (
-  $etcd_tag,
-  $logger_tag,
-  $registrator_tag,
-) {
+class portauthority::images () {
 
   docker::image { 'prozeta/pa-etcd':
     ensure    => present,
-    image_tag => $etcd_tag,
+    image_tag => $portauthority::etcd_tag,
   }
 
   docker::image { 'prozeta/pa-logger':
     ensure    => present,
-    image_tag => $logger_tag,
+    image_tag => $portauthority::logger_tag,
   }
 
   docker::image { 'prozeta/pa-registrator':
     ensure    => present,
-    image_tag => $registartor_tag,
+    image_tag => $portauthority::registrator_tag,
+  }
+
+  docker::image { 'swarm':
+    ensure    => present,
+    image_tag => $portauthority::swarm_tag,
   }
 
 }

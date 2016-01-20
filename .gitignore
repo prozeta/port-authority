@@ -1,2 +1,4 @@
 puppet/pkg
 puppet/pkg/*
+gem/Gemfile.lock
+gem/*.gem

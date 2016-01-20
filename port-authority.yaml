@@ -1,0 +1,27 @@
+---
+:debug: false
+:vip:
+  :interval: 1
+  :ip: 172.17.1.5
+  :mask: 255.255.255.0
+  :interface: eth0
+:haproxy:
+  :image: docker-registry.prz/stackdocks/haproxy:latest
+  :name: lb
+  :network: stackdocks
+:etcd:
+  :endpoint: http://localhost:4001
+  :interval: 1
+  :timeout: 2
+:docker:
+  :socket: tcp://localhost:4243
+:icmp:
+  :count: 2
+  :interval: 1
+:arping:
+  :count: 1
+  :wait: 1
+:commands:
+  :arping: /usr/bin/arping
+  :arp: /usr/sbin/arp
+  :iproute: /bin/ip

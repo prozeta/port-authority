@@ -43,7 +43,7 @@ module PortAuthority
       end
 
       def lb_up?
-        @lb_container.info['Status'] =~ /^[Uu]p/
+        @lb_container.info['State']['Running']
       end
 
       def lb_start!

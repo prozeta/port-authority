@@ -2,18 +2,18 @@ require 'ipaddr'
 require 'port-authority/util/vip'
 require 'port-authority/util/etcd'
 require 'port-authority/util/loadbalancer'
-require 'port-authority/watchdog/init'
-require 'port-authority/watchdog/threads/icmp'
-require 'port-authority/watchdog/threads/swarm'
+require 'port-authority/manager/init'
+require 'port-authority/manager/threads/icmp'
+require 'port-authority/manager/threads/swarm'
 
 module PortAuthority
-  module Watchdog
-    class Manager < PortAuthority::Watchdog::Init
+  module Manager
+    class App < PortAuthority::Manager::Init
 
       include PortAuthority::Util::Etcd
       include PortAuthority::Util::Vip
       include PortAuthority::Util::LoadBalancer
-      include PortAuthority::Watchdog::Threads
+      include PortAuthority::Manager::Threads
 
       def run
         # exit if not root
@@ -23,7 +23,7 @@ module PortAuthority
         end
 
         # set process name and nice level (default: -20)
-        setup 'pa-master-watchdog'
+        setup 'pa-manager'
 
         # prepare semaphores
         @semaphore = {
@@ -35,7 +35,7 @@ module PortAuthority
         # prepare threads
         @thread = {
           icmp: thread_icmp,
-          etcd: thread_swarm,
+          swarm: thread_swarm
         }
 
         # prepare status vars
@@ -45,13 +45,19 @@ module PortAuthority
         # start threads
         @thread.each_value(&:run)
 
+        # setup docker client
+        lb_docker_setup! || @exit = true
+
+        # prepare container with load-balancer
+        lb_create || @exit = true
+
         # wait for threads to make sure they gather something
         debug 'waiting for threads to gather something...'
         sleep @config[:vip][:interval]
         first_cycle = true
 
         # main loop
-        while !@exit do
+        until @exit
           # initialize local state vars on first iteration
           status_swarm = status_icmp = false if first_cycle
 
@@ -63,7 +69,7 @@ module PortAuthority
           @semaphore[:swarm].synchronize { status_swarm = @status_swarm }
 
           # the logic (should be self-explanatory ;))
-          if am_i_leader?
+          if status_swarm
             if got_vip?
               debug 'i am the leader with VIP, that is OK'
             else
@@ -72,17 +78,22 @@ module PortAuthority
                 info 'VIP is still up! (ICMP)'
                 # FIXME: notify by sensu client socket
               else
-                info 'VIP is unreachable by ICMP, checking for duplicates on L2'
-                if vip_dup?
-                  info 'VIP is still assigned! (ARP)'
-                  # FIXME: notify by sensu client socket
-                else
-                  info 'VIP is free :) assigning'
-                  vip_handle! status_swarm
-                  info 'updating other hosts about change'
-                  vip_update_arp!
-                end
+                # FIXME: proper arping handling
+                # info 'VIP is unreachable by ICMP, checking for duplicates on L2'
+                # if vip_dup?
+                #   info 'VIP is still assigned! (ARP)'
+                #   # FIXME: notify by sensu client socket
+                # else
+                #   info 'VIP is free :) assigning'
+                #   vip_handle! status_swarm
+                #   info 'updating other hosts about change'
+                #   vip_update_arp!
+                # end
               end
+              info 'VIP is free :) assigning'
+              vip_handle! status_swarm
+              info 'updating other hosts about change'
+              vip_update_arp!
             end
             if lb_up?
               debug 'i am the leader and load-balancer is up, that is OK'
@@ -107,14 +118,14 @@ module PortAuthority
             end
           end
 
+          next unless first_cycle
+
           # short report on first cycle
-          if first_cycle
-            info "i #{status_swarm ? 'AM' : 'am NOT'} the leader"
-            info "i #{got_vip? ? 'DO' : 'do NOT'} have the VIP"
-            info "i #{status_icmp ? 'CAN' : 'CANNOT'} see the VIP"
-            info "i #{status_haproxy ? 'CAN' : 'CANNOT'} see the VIP"
-            first_cycle = false
-          end
+          info "i #{status_swarm ? 'AM' : 'am NOT'} the leader"
+          info "i #{got_vip? ? 'DO' : 'do NOT'} have the VIP"
+          info "i #{status_icmp ? 'CAN' : 'CANNOT'} see the VIP"
+          info "i #{lb_up? ? 'AM' : 'am NOT'} running the LB"
+          first_cycle = false
         end
 
         # this is triggerred on exit

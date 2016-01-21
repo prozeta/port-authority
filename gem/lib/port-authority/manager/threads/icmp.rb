@@ -1,13 +1,13 @@
 require 'net/ping'
 
 module PortAuthority
-  module Watchdog
+  module Manager
     module Threads
       def thread_icmp
         Thread.new do
           debug 'starting ICMP thread...'
           icmp = Net::Ping::ICMP.new(@config[:vip][:ip])
-          while !@exit do
+          until @exit
             debug 'checking state by ICMP echo'
             status = vip_alive? icmp
             @semaphore[:icmp].synchronize { @status_icmp = status }

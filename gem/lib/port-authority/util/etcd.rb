@@ -23,7 +23,7 @@ module PortAuthority
       end
 
       def swarm_leader(etcd)
-        etcd.get('/_pa/docker/swarm/leader')
+        etcd.get('/_pa/docker/swarm/leader').value
       end
 
       def am_i_leader?(etcd)

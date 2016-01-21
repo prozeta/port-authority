@@ -10,7 +10,6 @@
   :image: docker-registry.prz/stackdocks/haproxy:latest
   :name: stackdocks-controller
   :network: stackdocks
-  :docker_endpoint: tcp://localhost:4243
 :etcd:
   :endpoint: http://localhost:4001
   :interval: 1

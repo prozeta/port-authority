@@ -1,5 +1,5 @@
 module PortAuthority
-  module Watchdog
+  module Manager
   end
 
   module Util

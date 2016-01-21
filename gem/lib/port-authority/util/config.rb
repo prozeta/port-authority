@@ -14,9 +14,6 @@ module PortAuthority
             interval: 1,
             timeout: 2
           },
-          docker: {
-            socket: 'tcp://localhost:4243'
-          },
           icmp: {
             count: 2,
             interval: 1
@@ -34,7 +31,8 @@ module PortAuthority
           lb: {
             image: 'docker-registry.prz/stackdocks/haproxy:latest',
             name: 'lb',
-            network: 'overlay'
+            network: 'overlay',
+            docker_endpoint: 'unix:///var/run/docker.sock'
           },
           commands: {
             arping: `which arping`.chomp,

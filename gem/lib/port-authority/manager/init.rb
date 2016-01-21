@@ -6,7 +6,7 @@ require 'port-authority/util/logger'
 require 'port-authority/util/helpers'
 
 module PortAuthority
-  module Watchdog
+  module Manager
     class Init
 
       include PortAuthority::Util::Config

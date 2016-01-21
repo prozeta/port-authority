@@ -3,7 +3,7 @@ require 'docker-api'
 module PortAuthority
   module Util
     module LoadBalancer
-      # connect to ETCD
+      # connect to Docker
       def lb_docker_setup!
         Docker.url = @config[:lb][:docker_endpoint]
         Docker.version
@@ -13,20 +13,41 @@ module PortAuthority
       end
 
       def lb_create
+        img = Docker::Image.create('fromImage' => @config[:lb][:image])
+
+        # setup port bindings hash
+        port_bindings = Hash.new
+        img.json['ContainerConfig']['ExposedPorts'].keys.each do |port|
+          port_bindings[port] = [ { 'HostPort' => "#{port.split('/').first}" } ]
+        end
+
+        begin
+          Docker::Container.get(@config[:lb][:name]).delete
+          info 'old LB removed'
+        rescue Docker::Error::NotFoundError
+          debug 'no LB found here, not removing'
+        end
+
+        # create container with
         @lb_container = Docker::Container.create(
-          'Image' => @config[:lb][:image],
-          'Name' => @config[:lb][:name],
+          'Image' => img.json['Id'],
+          'name' => @config[:lb][:name],
           'Hostname' => @config[:lb][:name],
-          'Net' => @config[:lb][:network]
+          'Env' => [ "ETCDCTL_ENDPOINT=http://#{@config[:vip][:ip]}:4001" ],
+          'RestartPolicy' => { 'Name' => 'never' },
+          'HostConfig' => {
+            'PortBindings' => port_bindings,
+            'NetworkMode' => @config[:lb][:network]
+          }
         )
       end
 
       def lb_up?
-        @lb_container.status
+        @lb_container.info['Status'] =~ /^[Uu]p/
       end
 
       def lb_start!
-        @lb_container.start # FIXME must expose ports
+        @lb_container.start
       end
 
       def lb_stop!

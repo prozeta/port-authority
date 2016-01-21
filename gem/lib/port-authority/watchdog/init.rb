@@ -4,8 +4,6 @@ require 'etcd-tools'
 require 'port-authority/util/config'
 require 'port-authority/util/logger'
 require 'port-authority/util/helpers'
-require 'port-authority/util/swarm'
-require 'port-authority/watchdog/threads/swarm'
 
 module PortAuthority
   module Watchdog
@@ -14,8 +12,6 @@ module PortAuthority
       include PortAuthority::Util::Config
       include PortAuthority::Util::Logger
       include PortAuthority::Util::Helpers
-      include PortAuthority::Util::Swarm
-      include PortAuthority::Watchdog::Threads
 
       def initialize
         @config = { debug: false }
@@ -35,7 +31,7 @@ module PortAuthority
           $0 = proc_name
         end
         Process.setpriority(Process::PRIO_PROCESS, 0, nice)
-        # TODO: Process.daemon ...
+        # FIXME: Process.daemon ...
       end
     end
   end

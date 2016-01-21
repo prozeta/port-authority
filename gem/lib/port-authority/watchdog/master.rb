@@ -1,170 +1,145 @@
 require 'ipaddr'
+require 'port-authority/util/vip'
+require 'port-authority/util/etcd'
+require 'port-authority/util/loadbalancer'
 require 'port-authority/watchdog/init'
 require 'port-authority/watchdog/threads/icmp'
+require 'port-authority/watchdog/threads/swarm'
 
 module PortAuthority
   module Watchdog
-    class Master < PortAuthority::Watchdog::Init
+    class Manager < PortAuthority::Watchdog::Init
+
+      include PortAuthority::Util::Etcd
+      include PortAuthority::Util::Vip
+      include PortAuthority::Util::LoadBalancer
+      include PortAuthority::Watchdog::Threads
 
       def run
+        # exit if not root
         if Process.euid != 0
           $stderr.puts 'Must run under root user!'
           exit! 1
         end
+
+        # set process name and nice level (default: -20)
         setup 'pa-master-watchdog'
+
+        # prepare semaphores
         @semaphore = {
           log: Mutex.new,
           swarm: Mutex.new,
           icmp: Mutex.new
         }
-        @thread = { icmp: thread_icmp, etcd: thread_swarm }
+
+        # prepare threads
+        @thread = {
+          icmp: thread_icmp,
+          etcd: thread_swarm,
+        }
+
+        # prepare status vars
         @status_swarm = false
         @status_icmp = false
+
+        # start threads
         @thread.each_value(&:run)
+
+        # wait for threads to make sure they gather something
+        debug 'waiting for threads to gather something...'
         sleep @config[:vip][:interval]
         first_cycle = true
+
+        # main loop
         while !@exit do
-          status_swarm = status_icmp = false # FIXME: introduce CVs...
+          # initialize local state vars on first iteration
+          status_swarm = status_icmp = false if first_cycle
+
+          # iteration interval
+          sleep @config[:vip][:interval]
+
+          # sync state to local variables
           @semaphore[:icmp].synchronize { status_icmp = @status_icmp }
           @semaphore[:swarm].synchronize { status_swarm = @status_swarm }
-          if status_swarm
+
+          # the logic (should be self-explanatory ;))
+          if am_i_leader?
             if got_vip?
-              debug '<main> i am the leader with VIP, that is OK'
+              debug 'i am the leader with VIP, that is OK'
             else
-              info '<main> i am the leader without VIP, checking whether it is free'
+              info 'i am the leader without VIP, checking whether it is free'
               if status_icmp
-                info '<main> VIP is still up! (ICMP)'
+                info 'VIP is still up! (ICMP)'
                 # FIXME: notify by sensu client socket
               else
-                info '<main> VIP is unreachable by ICMP, checking for duplicates on L2'
+                info 'VIP is unreachable by ICMP, checking for duplicates on L2'
                 if vip_dup?
-                  info '<main> VIP is still assigned! (ARP)'
+                  info 'VIP is still assigned! (ARP)'
                   # FIXME: notify by sensu client socket
                 else
-                  info '<main> VIP is free, assigning'
+                  info 'VIP is free :) assigning'
                   vip_handle! status_swarm
-                  info '<main> updating other hosts about change'
+                  info 'updating other hosts about change'
                   vip_update_arp!
                 end
               end
             end
+            if lb_up?
+              debug 'i am the leader and load-balancer is up, that is OK'
+            else
+              info 'i am the leader and load-balancer is down, starting'
+              lb_start!
+            end
           else
             if got_vip?
-              info '<main> i got VIP and should not, removing'
+              info 'i got VIP and should not, removing'
               vip_handle! status_swarm
-              info '<main> updating other hosts about change'
+              info 'updating other hosts about change'
               vip_update_arp!
             else
-              debug '<main> i am not a leader and i do not have the VIP, that is OK'
+              debug 'i am not the leader and i do not have the VIP, that is OK'
+            end
+            if lb_up?
+              info 'i am not the leader and load-balancer is up, stopping'
+              lb_stop!
+            else
+              debug 'i am not the leader and load-balancer is down, that is OK'
             end
           end
-          sleep @config[:vip][:interval]
+
+          # short report on first cycle
           if first_cycle
-            @semaphore[:icmp].synchronize { status_icmp = @status_icmp }
-            @semaphore[:swarm].synchronize { status_swarm = @status_swarm }
-            info "<main> i #{status_swarm ? 'AM' : 'am NOT'} the leader"
-            info "<main> i #{got_vip? ? 'DO' : 'do NOT'} have the VIP"
-            info "<main> i #{status_icmp ? 'CAN' : 'CANNOT'} see the VIP"
+            info "i #{status_swarm ? 'AM' : 'am NOT'} the leader"
+            info "i #{got_vip? ? 'DO' : 'do NOT'} have the VIP"
+            info "i #{status_icmp ? 'CAN' : 'CANNOT'} see the VIP"
+            info "i #{status_haproxy ? 'CAN' : 'CANNOT'} see the VIP"
+            first_cycle = false
           end
-          first_cycle = false
         end
-        info '<main> SIGTERM received'
+
+        # this is triggerred on exit
+        info 'SIGTERM received'
+        info 'waiting for threads to finish...'
+        @thread.each_value(&:join)
+
+        # remove VIP on shutdown
         if got_vip?
-          info '<main> removing VIP'
+          info 'removing VIP'
           vip_handle! false
           vip_update_arp!
         end
-        info '<main> stopping threads...'
-        @thread.each_value(&:join)
-        info '<main> exiting...'
+
+        # stop LB on shutdown
+        if lb_up?
+          info 'stopping load-balancer'
+          lb_stop!
+        end
+
+        info 'exiting...'
         exit 0
       end
 
-      # add or remove VIP on interface
-      # <IMPLEMENTED>
-      def vip_handle!(leader)
-        ip = IPAddr.new(@config[:vip][:ip])
-        mask = @config[:vip][:mask]
-        cmd = [ iproute,
-                'address',
-                '',
-                "#{ip}/#{mask}",
-                'dev',
-                @config[:vip][:interface],
-                'label',
-                @config[:vip][:interface] + '-vip',
-                '>/dev/null 2>&1'
-              ]
-        leader ? cmd[2] = 'add' : cmd[2] = 'delete'
-        debug "<shell> #{cmd.join(' ')}"
-        if system(cmd.join(' '))
-          return true
-        else
-          return false
-        end
-      end
 
-      # send gratuitous ARP to the network
-      # <IMPLEMENTED>
-      def vip_update_arp!
-        cmd = [ arping, '-U', '-q',
-                '-c', @config[:arping][:count],
-                '-I', @config[:vip][:interface],
-                @config[:vip][:ip] ]
-        debug "<shell> #{cmd.join(' ')}"
-        if system(cmd.join(' '))
-          return true
-        else
-          return false
-        end
-      end
-
-      # check whether VIP is assigned to me
-      # <IMPLEMENTED>
-      def got_vip?
-        cmd = [ iproute,
-                'address',
-                'show',
-                'label',
-                "#{@config[:vip][:interface]}-vip",
-                '|',
-                'grep',
-                '-q',
-                "#{@config[:vip][:interface]}-vip"
-              ]
-        debug "<shell> #{cmd.join(' ')}"
-        if system(cmd.join(' '))
-          return true
-        else
-          return false
-        end
-      end
-
-      # check reachability of VIP by ICMP echo
-      # <--- REWORK
-      def vip_alive?(icmp)
-        (1..@config[:icmp][:count]).each { return true if icmp.ping }
-        return false
-      end
-
-      # check whether the IP is registered anywhere
-      #
-      def vip_dup?
-        cmd_arp = [ arp, '-d', @config[:vip][:ip], '>/dev/null 2>&1' ]
-        cmd_arping = [  arping, '-D', '-q',
-                        '-c', @config[:arping][:count],
-                        '-w', @config[:arping][:wait],
-                        '-I', @config[:vip][:interface],
-                        @config[:vip][:ip] ]
-        debug "<shell> #{cmd_arp.join(' ')}"
-        system(cmd_arp.join(' '))
-        debug "<shell> #{cmd_arping.join(' ')}"
-        if system(cmd_arping.join(' '))
-          return false
-        else
-          return true
-        end
-      end
     end
   end
 end

@@ -2,8 +2,8 @@ Gem::Specification.new do |s|
   s.name                  = 'port-authority'
   s.version               = '0.3.1'
   s.date                  = Time.now.strftime('%Y-%m-%d')
-  s.summary               = "Port Authority"
-  s.description           = "Tools for PortAuthority"
+  s.summary               = 'Port Authority'
+  s.description           = 'Tools for PortAuthority'
   s.authors               = ["Radek 'blufor' Slavicinsky"]
   s.email                 = 'radek.slavicinsky@gmail.com'
   s.files                 = Dir['lib/**/*.rb']

@@ -5,16 +5,16 @@ module PortAuthority
     module Threads
       def thread_icmp
         Thread.new do
-          debug '<icmp> starting thread...'
+          debug 'starting ICMP thread...'
           icmp = Net::Ping::ICMP.new(@config[:vip][:ip])
           while !@exit do
-            debug '<icmp> checking state by ping'
+            debug 'checking state by ICMP echo'
             status = vip_alive? icmp
             @semaphore[:icmp].synchronize { @status_icmp = status }
-            debug "<icmp> VIP is #{status ? 'alive' : 'down' }"
+            debug "VIP is #{status ? 'alive' : 'down' } according to ICMP"
             sleep @config[:icmp][:interval]
           end
-          info '<icmp> ending thread...'
+          info 'ending ICMP thread...'
         end
       end
     end

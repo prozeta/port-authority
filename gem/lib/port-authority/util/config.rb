@@ -8,6 +8,7 @@ module PortAuthority
 
       def default_config
         { debug: false,
+          syslog: false,
           etcd: {
             endpoint: 'http://localhost:4001',
             interval: 1,
@@ -30,10 +31,10 @@ module PortAuthority
             mask: '255.255.255.0',
             interface: 'eth0'
           },
-          haproxy: {
+          lb: {
             image: 'docker-registry.prz/stackdocks/haproxy:latest',
             name: 'lb',
-            network: 'stackdocks'
+            network: 'overlay'
           },
           commands: {
             arping: `which arping`.chomp,

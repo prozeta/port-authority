@@ -7,9 +7,9 @@ module PortAuthority
           etcd = etcd_connect!
           while !@exit do
             debug '<swarm> checking etcd state'
-            status = leader? etcd
+            status = am_i_leader? etcd
             @semaphore[:swarm].synchronize { @status_swarm = status }
-            debug "<swarm> i am #{status ? 'the leader' : 'not a leader' }"
+            debug "<swarm> i am #{status ? 'the leader' : 'not the leader' }"
             sleep @config[:etcd][:interval]
           end
           info '<swarm> ending thread...'

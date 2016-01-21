@@ -43,7 +43,7 @@ module PortAuthority
       end
 
       def lb_up?
-        @lb_container.info['State']['Running']
+        @lb_container.json['State']['Running']
       end
 
       def lb_start!

@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/MethodLength
 module PortAuthority
   module Manager
     module Threads

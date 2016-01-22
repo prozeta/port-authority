@@ -56,10 +56,7 @@ class portauthority (
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
 
-  package { 'etcd-tools':
-    ensure   => latest,
-    provider => 'gem',
-  }
+
 
   class { 'docker':
     dns              => $portauthority::dns,
@@ -67,9 +64,18 @@ class portauthority (
     tcp_bind         => "tcp://${portauthority::host_ip}:4243",
   } ->
 
+  class { 'portauthority::tools': } ->
   class { 'portauthority::images': } ->
   class { 'portauthority::services': } ->
   class { 'portauthority::network': }
+
+  service { 'pa-manager':
+    ensure     => running,
+    enable     => true,
+    hasrestart => true,
+    hasstatus  => true,
+  }
+
 
 }
 

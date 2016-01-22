@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/LineLength, Metrics/AbcSize, Metrics/MethodLength
 require 'logger'
 
 module PortAuthority

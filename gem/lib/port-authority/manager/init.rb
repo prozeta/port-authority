@@ -8,7 +8,6 @@ require 'port-authority/util/helpers'
 module PortAuthority
   module Manager
     class Init
-
       include PortAuthority::Util::Config
       include PortAuthority::Util::Logger
       include PortAuthority::Util::Helpers
@@ -17,7 +16,7 @@ module PortAuthority
         @config = { debug: false }
         @config = config
         @exit = false
-        @exit_sigs = ['INT', 'TERM']
+        @exit_sigs = %w(INT TERM)
         @exit_sigs.each { |sig| Signal.trap(sig) { @exit = true } }
         Signal.trap('USR1') { @config[:debug] = false }
         Signal.trap('USR2') { @config[:debug] = true }

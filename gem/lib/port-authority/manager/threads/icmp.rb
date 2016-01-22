@@ -1,3 +1,4 @@
+# rubocop:disable Metrics/MethodLength
 require 'net/ping'
 
 module PortAuthority
@@ -11,7 +12,7 @@ module PortAuthority
             debug 'checking state by ICMP echo'
             status = vip_alive? icmp
             @semaphore[:icmp].synchronize { @status_icmp = status }
-            debug "VIP is #{status ? 'alive' : 'down' } according to ICMP"
+            debug "VIP is #{status ? 'alive' : 'down'} according to ICMP"
             sleep @config[:icmp][:interval]
           end
           info 'ending ICMP thread...'

@@ -1,3 +1,4 @@
+# rubocop:disable MethodLength, CyclomaticComplexity, Metrics/BlockNesting, Metrics/LineLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 require 'ipaddr'
 require 'port-authority/util/vip'
 require 'port-authority/util/etcd'
@@ -8,8 +9,10 @@ require 'port-authority/manager/threads/swarm'
 
 module PortAuthority
   module Manager
+    ##
+    # Port Authority Manager - manages floating VIP and lb placement
+    #
     class App < PortAuthority::Manager::Init
-
       include PortAuthority::Util::Etcd
       include PortAuthority::Util::Vip
       include PortAuthority::Util::LoadBalancer
@@ -89,11 +92,11 @@ module PortAuthority
                 #   info 'updating other hosts about change'
                 #   vip_update_arp!
                 # end
+                info 'VIP is free :) assigning'
+                vip_handle! status_swarm
+                info 'updating other hosts about change'
+                vip_update_arp!
               end
-              info 'VIP is free :) assigning'
-              vip_handle! status_swarm
-              info 'updating other hosts about change'
-              vip_update_arp!
             end
             if lb_up?
               debug 'i am the leader and load-balancer is up, that is OK'
@@ -149,8 +152,6 @@ module PortAuthority
         info 'exiting...'
         exit 0
       end
-
-
     end
   end
 end

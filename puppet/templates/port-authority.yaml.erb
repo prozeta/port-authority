@@ -1,0 +1,26 @@
+---
+:debug: false
+:syslog: false
+:vip:
+  :interval: 1
+  :ip: <%= @vip %>
+  :mask: 255.255.255.0
+  :interface: eth0
+:lb:
+  :image: <%= @lb_image %>
+  :name: <%= @lb_name %>
+  :network: <%= @lb_network %>
+:etcd:
+  :endpoint: http://localhost:4001
+  :interval: 1
+  :timeout: 2
+:icmp:
+  :count: 5
+  :interval: 1
+:arping:
+  :count: 2
+  :wait: 1
+:commands:
+  :arping: /usr/bin/arping
+  :arp: /usr/sbin/arp
+  :iproute: /bin/ip

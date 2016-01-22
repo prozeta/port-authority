@@ -8,7 +8,7 @@ module PortAuthority
       end
 
       def my_ip
-        @my_ip ||= Socket.ip_address_list.detect { |i| i.ipv4_private? }.ip_address
+        @my_ip ||= Socket.ip_address_list.detect(&:ipv4_private?).ip_address
       end
 
       def arping

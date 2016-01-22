@@ -98,7 +98,7 @@ define pa_service (
 
   $cluster_host_id = inline_template('<%= @hostname.match(/[0-9]+$/).to_s %>')
   $env_final = [ "ETCDCTL_ENDPOINT=${endpoint}", "DOCKER_HOST=${::ipaddress_eth0}" ] + $env
-
+  $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
 
   if $directory {
     $volumes_final = [ "/srv/${title}:${directory}" ] + $volumes
@@ -120,7 +120,7 @@ define pa_service (
     ports            => $ports,
     net              => $net,
     volumes          => $volumes_final,
-    depends          => $depends,
+    depends          => $depends_final,
     privileged       => $privileged,
     use_name         => false,
     extra_parameters => "--name=${title}${cluster_host_id}",

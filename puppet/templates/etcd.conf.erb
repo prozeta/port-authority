@@ -1,0 +1,7 @@
+<% if scope['portauthority::cluster_enabled'] -%>
+export ETCD_INITIAL_CLUSTER_TOKEN="port-authority"
+export ETCD_INITIAL_CLUSTER="<%= scope['portauthority::cluster_members'].map { |host| host.split(".").first + "=http://" + host + ":2380" }.join(",") %>"
+export ETCD_INITIAL_ADVERTISE_PEER_URLS="<%= scope['portauthority::host_ip'] %>"
+export ETCD_LISTEN_PEER_URLS="http://0.0.0.0:2380"
+export ETCD_HEARTBEAT_INTERVAL="<%= %>"
+<% end -%>

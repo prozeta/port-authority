@@ -27,7 +27,6 @@
 # Radek 'blufor' Slavicinsky <radek@blufor.cz>
 #
 class portauthority (
-  $cluster_enabled = false,
   $cluster_members = [],
   $private_registry = '',
   $log_destination = '',
@@ -37,11 +36,19 @@ class portauthority (
   $gwbridge_network = '192.168.254.0/24',
   $gwbridge_address = '192.168.254.1',
   $dns = ['8.8.8.8', '4.4.4.4'],
-  $etcd_tag = 'latest',
   $logger_tag = 'latest',
   $registrator_tag = 'latest',
   $swarm_tag = 'latest',
 ) {
+
+  if $cluster_members == [] {
+    $cluster_enabled = false
+  } else {
+    $cluster_enabled = true
+  }
+
+  $manager = false
+  each($portauthority::cluster_members) |$m| { if ( $m == $::fqdn ) { $manager = true } }
 
   if $portauthority::private_registry != '' {
     $registry_cfg = "--insecure-registry ${private_registry} "
@@ -56,7 +63,11 @@ class portauthority (
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
 
-
+  if $manager {
+    class { 'portauthority::etcd':
+      before => Class['docker'],
+    }
+  }
 
   class { 'docker':
     dns              => $portauthority::dns,
@@ -69,12 +80,6 @@ class portauthority (
   class { 'portauthority::services': } ->
   class { 'portauthority::network': }
 
-  service { 'pa-manager':
-    ensure     => running,
-    enable     => true,
-    hasrestart => true,
-    hasstatus  => true,
-  }
 
 
 }

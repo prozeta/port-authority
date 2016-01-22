@@ -18,14 +18,14 @@ class portauthority::etcd {
     group   => 'root',
     mode    => '0640',
     require => Package['etcd'],
-    content => template('portauthority/etcd.conf.erb'),
+    content => template('portauthority/etcd.default.erb'),
   }
 
   service { 'etcd':
     ensure     => running,
     enable     => true,
     hasstatus  => true,
-    hasrestart => true
+    hasrestart => true,
     subscribe  => [ File['/etc/etcd.conf'], File['/etc/default/etcd'] ],
   }
 }

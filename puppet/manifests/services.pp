@@ -5,7 +5,7 @@ class portauthority::services () {
 
   Docker::Run {
     service_prefix => 'pa-'
-  } ->
+  }
 
   docker::run { 'logger':
     image    => 'prozeta/pa-logger',

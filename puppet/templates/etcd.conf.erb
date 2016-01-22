@@ -4,5 +4,5 @@ export ETCD_INITIAL_CLUSTER="<%= scope['portauthority::cluster_members'].map { |
 export ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<%= scope['portauthority::host_ip'] %>:2380"
 export ETCD_LISTEN_PEER_URLS="http://0.0.0.0:2380"
 export ETCD_HEARTBEAT_INTERVAL="500"
-export ETCD_ELECTION_TIMEOUT="2000"
+export ETCD_ELECTION_TIMEOUT="5000"
 <% end -%>

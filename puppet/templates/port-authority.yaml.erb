@@ -3,13 +3,13 @@
 :syslog: false
 :vip:
   :interval: 1
-  :ip: <%= @vip %>
+  :ip: <%= scope['portauthority::floating_ip'] %>
   :mask: 255.255.255.0
   :interface: eth0
 :lb:
-  :image: <%= @lb_image %>
-  :name: <%= @lb_name %>
-  :network: <%= @lb_network %>
+  :image: <% scope['portauthority::lb_image'] %>
+  :name: <% scope['portauthority::lb_name'] %>
+  :network: stackdocks
 :etcd:
   :endpoint: http://localhost:2379
   :interval: 1

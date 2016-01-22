@@ -27,11 +27,13 @@
 # Radek 'blufor' Slavicinsky <radek@blufor.cz>
 #
 class portauthority (
+  $floating_ip,
   $cluster_members = [],
   $private_registry = '',
   $log_destination = '',
   $host_ip = $::ipaddress_eth0,
-  $floating_ip,
+  $lb_image = 'prozeta/pa-haproxy:latest',
+  $lb_name = 'pa-loadbalancer',
   $default_bridge_ip = '192.168.255.1/24',
   $gwbridge_network = '192.168.254.0/24',
   $gwbridge_address = '192.168.254.1',

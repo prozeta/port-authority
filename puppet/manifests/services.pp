@@ -23,18 +23,18 @@ class portauthority::services () {
         use_name => true,
         net      => 'host',
         depends  => [ 'logger', 'swarm-agent' ],
-      } ->
-      service { 'pa-manager':
-        ensure     => running,
-        enable     => true,
-        hasrestart => true,
-        hasstatus  => true,
-      }
+      } # ->
+      # service { 'pa-manager':
+      #   ensure     => running,
+      #   enable     => true,
+      #   hasrestart => true,
+      #   hasstatus  => true,
+      # }
     } else {
-      service { 'pa-manager':
-        ensure => stopped,
-        enable => false,
-      }
+      # service { 'pa-manager':
+      #   ensure => stopped,
+      #   enable => false,
+      # }
     }
     docker::run { 'registrator':
       image    => 'prozeta/pa-registrator',

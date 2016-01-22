@@ -7,8 +7,8 @@
   :mask: 255.255.255.0
   :interface: eth0
 :lb:
-  :image: <% scope['portauthority::lb_image'] %>
-  :name: <% scope['portauthority::lb_name'] %>
+  :image: <%= scope['portauthority::lb_image'] %>
+  :name: <%= scope['portauthority::lb_name'] %>
   :network: stackdocks
 :etcd:
   :endpoint: http://localhost:2379

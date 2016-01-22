@@ -2,11 +2,6 @@
 #
 class portauthority::images () {
 
-  docker::image { 'prozeta/pa-etcd':
-    ensure    => present,
-    image_tag => $portauthority::etcd_tag,
-  }
-
   docker::image { 'prozeta/pa-logger':
     ensure    => present,
     image_tag => $portauthority::logger_tag,

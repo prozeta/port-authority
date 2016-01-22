@@ -47,8 +47,7 @@ class portauthority (
     $cluster_enabled = true
   }
 
-  $manager = false
-  each($portauthority::cluster_members) |$m| { if ( $m == $::fqdn ) { $manager = true } }
+  $cluster_manager = inline_template('<%= @cluster_members.index(scope["::fqdn"]) ? true : false %>')
 
   if $portauthority::private_registry != '' {
     $registry_cfg = "--insecure-registry ${private_registry} "
@@ -63,7 +62,7 @@ class portauthority (
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
 
-  if $manager {
+  if $cluster_manager {
     class { 'portauthority::etcd':
       before => Class['docker'],
     }

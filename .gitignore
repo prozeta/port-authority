@@ -1,4 +1,6 @@
 puppet/pkg
 puppet/pkg/*
 gem/Gemfile.lock
-gem/*.gem
+puppet/Gemfile.lock
+port-authority-*.gem
+prozeta-portauthority-*.tar.gz

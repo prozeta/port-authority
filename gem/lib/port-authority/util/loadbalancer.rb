@@ -40,7 +40,7 @@ module PortAuthority
           'Image' => img.json['Id'],
           'name' => @config[:lb][:name],
           'Hostname' => @config[:lb][:name],
-          'Env' => [ "ETCDCTL_ENDPOINT=#{@config[:etcd][:endpoints].join(',')}" ],
+          'Env' => [ "ETCDCTL_ENDPOINT=#{@config[:etcd][:endpoints].map { |e| "http://#{e}" }.join(',')}" ],
           'RestartPolicy' => { 'Name' => 'never' },
           'HostConfig' => {
             'PortBindings' => port_bindings,

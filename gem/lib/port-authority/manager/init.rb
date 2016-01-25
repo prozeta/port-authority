@@ -12,28 +12,29 @@ module PortAuthority
       include PortAuthority::Util::Logger
       include PortAuthority::Util::Helpers
 
-      def initialize
-        @config = { debug: false }
+      def initialize(proc_name='dummy')
         @config = config
         @exit = false
-        @semaphore = {
-          log: Mutex.new,
-        }
-        @exit_sigs = %w(INT TERM)
-        @exit_sigs.each { |sig| Signal.trap(sig) { info 'exit signal received, waiting for threads to exit...'; @exit = true } }
-        Signal.trap('USR1') { @config[:debug] = false }
-        Signal.trap('USR2') { @config[:debug] = true }
-        Signal.trap('HUP')  { @config = config }
+        @semaphore = { log: Mutex.new }
         Thread.current[:name] = 'main'
+        syslog_init proc_name if @config[:syslog]
+        setup proc_name
         info 'starting main thread'
+        debug 'setting signal handling'
+        @exit_sigs = %w(INT TERM)
+        @exit_sigs.each { |sig| Signal.trap(sig) { @exit = true } }
+        Signal.trap('USR2') { @config[:debug] = !@config[:debug] }
+        Signal.trap('HUP')  { @config = config }
       end
 
       def setup(proc_name, nice = -20)
+        debug 'setting process name'
         if RUBY_VERSION >= '2.1'
           Process.setproctitle(proc_name)
         else
           $0 = proc_name
         end
+        debug 'setting process title'
         Process.setpriority(Process::PRIO_PROCESS, 0, nice)
         # FIXME: Process.daemon ...
       end

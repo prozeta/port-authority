@@ -1,3 +1,3 @@
 #!/usr/bin/env ruby
 require 'port-authority/manager/app'
-PortAuthority::Manager::App.new.run
+PortAuthority::Manager::App.new('pa-manager').run

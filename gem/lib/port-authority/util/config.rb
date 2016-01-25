@@ -26,12 +26,12 @@ module PortAuthority
           syslog: false,
           etcd: {
             endpoints: ['http://localhost:2379'],
-            interval: 1,
-            timeout: 2
+            interval: 5,
+            timeout: 5
           },
           icmp: {
-            count: 2,
-            interval: 1
+            count: 5,
+            interval: 2
           },
           arping: {
             count: 1,

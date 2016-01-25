@@ -28,6 +28,8 @@
 #
 class portauthority (
   $floating_ip,
+  $floating_ip_mask = '255.255.255.0',
+  $floating_ip_iface = 'eth0',
   $cluster_members = [],
   $private_registry = '',
   $log_destination = '',
@@ -58,7 +60,7 @@ class portauthority (
   }
 
   if $cluster_enabled {
-    $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":4001" }.join(",") + "/_pa" %>')
+    $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${host_ip}:4243"
   } else {
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"

@@ -19,8 +19,8 @@ module PortAuthority
             end
             info 'ending ICMP thread...'
           rescue StandardError => e
-            err "#{e.class}: #{e.message}"
-            err e.backtrace
+            alert "#{e.class}: #{e.message}"
+            alert e.backtrace
             @exit = true
           end
         end

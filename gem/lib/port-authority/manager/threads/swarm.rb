@@ -19,8 +19,8 @@ module PortAuthority
             end
             info 'ending swarm thread...'
           rescue PortAuthority::Errors::ETCDIsSick => e
-            err "#{e.class}: #{e.message}"
-            err "connection: " + e.etcd.to_s
+            notice "#{e.class}: #{e.message}"
+            notice "connection: " + e.etcd.to_s
             @semaphore[:swarm].synchronize { @status_swarm = false }
             sleep @config[:etcd][:interval]
             retry unless @exit
@@ -31,8 +31,8 @@ module PortAuthority
             sleep @config[:etcd][:interval]
             retry unless @exit
           rescue StandardError => e
-            err e.message
-            err e.backtrace.to_s
+            alert e.message
+            alert e.backtrace.to_s
             @exit = true
           end
         end

@@ -1,7 +1,7 @@
 # = Class: portauthority::services
 #
 class portauthority::services () {
-  $etcd_hosts_swarm = inline_template('<%= scope["portauthority::cluster_members"].map { |host| host + ":4001" }.join(",") %>')
+  $etcd_hosts_swarm = inline_template('<%= scope["portauthority::cluster_members"].map { |host| host + ":2379" }.join(",") %>')
 
   Docker::Run {
     service_prefix => 'pa-'

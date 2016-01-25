@@ -1,18 +1,27 @@
+<%
+if scope['portauthority::cluster_members'].empty
+  endpoints = ['localhost']
+else
+  endpoints = scope['portauthority::cluster_members']
+end
+-%>
 ---
 :debug: false
-:syslog: false
+:syslog: true
 :vip:
-  :interval: 1
+  :interval: 5
   :ip: <%= scope['portauthority::floating_ip'] %>
-  :mask: 255.255.255.0
-  :interface: eth0
+  :mask: <%= scope['portauthority::floating_ip_mask'] %>
+  :interface: <%= scope['portauthority::floating_ip_iface'] %>
 :lb:
   :image: <%= scope['portauthority::lb_image'] %>
   :name: <%= scope['portauthority::lb_name'] %>
   :network: stackdocks
 :etcd:
-  :endpoint: http://localhost:2379
-  :interval: 1
+  :endpoints: <% endpoints.each do |e| -%>
+    - http://<%= e %>:2379
+<% end -%>
+  :interval: 2
   :timeout: 2
 :icmp:
   :count: 5

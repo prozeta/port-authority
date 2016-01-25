@@ -22,24 +22,17 @@ module PortAuthority
       def run
         # exit if not root
         if Process.euid != 0
-          $stderr.puts 'must run under root user!'
+          alert 'must run under root user!'
           exit! 1
         end
 
-        # set process name and nice level (default: -20)
-        setup 'pa-manager'
+        Signal.trap('USR1') { @lb_update_hook = true }
 
         # prepare semaphores
-        @semaphore.merge!({
-          swarm: Mutex.new,
-          icmp: Mutex.new
-        })
+        @semaphore.merge!(swarm: Mutex.new, icmp: Mutex.new)
 
         # prepare threads
-        @thread = {
-          icmp: thread_icmp,
-          swarm: thread_swarm
-        }
+        @thread = {icmp: thread_icmp,swarm: thread_swarm}
 
         # prepare status vars
         @status_swarm = false
@@ -52,17 +45,23 @@ module PortAuthority
         lb_docker_setup! || @exit = true
 
         # prepare container with load-balancer
-        lb_create || @exit = true
+        lb_create!
 
         # wait for threads to make sure they gather something
         debug 'waiting for threads to gather something...'
         sleep @config[:vip][:interval]
         first_cycle = true
+        status_time = Time.now.to_i - 60
 
         # main loop
         until @exit
           # initialize local state vars on first iteration
           status_swarm = status_icmp = false if first_cycle
+
+          if @lb_update_hook
+            notice 'updating LB image'
+            lb_update!
+          end
 
           # iteration interval
           sleep @config[:vip][:interval]
@@ -93,44 +92,41 @@ module PortAuthority
                 #   info 'updating other hosts about change'
                 #   vip_update_arp!
                 # end
-                info 'VIP is free :) assigning'
+                notice 'VIP is free :) assigning'
                 vip_handle! status_swarm
-                info 'updating other hosts about change'
+                notice 'updating other hosts about change'
                 vip_update_arp!
               end
             end
             if lb_up?
               debug 'load-balancer is up, that is OK'
             else
-              info 'load-balancer is down, starting'
+              notice 'load-balancer is down, starting'
               lb_start!
             end
           else
             debug 'i am not the leader'
             if got_vip?
-              info 'i got VIP and should not, removing'
+              notice 'i got VIP and should not, removing'
               vip_handle! status_swarm
-              info 'updating other hosts about change'
+              notice 'updating other hosts about change'
               vip_update_arp!
             else
               debug 'no VIP here, that is OK'
             end
             if lb_up?
-              info 'load-balancer is up, stopping'
+              notice 'load-balancer is up, stopping'
               lb_stop!
             else
               debug 'load-balancer is down, that is OK'
             end
           end
 
-          next unless first_cycle
+          if status_time + 60 <= Time.now.to_i
+            info "STATUS_REPORT { leader: '#{status_swarm ? 'yes' : 'no'}', vip: '#{got_vip? ? 'yes' : 'no'}/#{status_icmp ? 'up' : 'down'}', lb: '#{lb_up? ? 'yes' : 'no'}' }"
+            status_time = Time.now.to_i
+          end
 
-          # short report on first cycle
-          info "i #{status_swarm ? 'AM' : 'am NOT'} the leader"
-          info "i #{got_vip? ? 'DO' : 'do NOT'} have the VIP"
-          info "i #{status_icmp ? 'CAN' : 'CANNOT'} see the VIP"
-          info "i #{lb_up? ? 'AM' : 'am NOT'} running the LB"
-          first_cycle = false
         end
 
         # this is triggerred on exit
@@ -138,14 +134,14 @@ module PortAuthority
 
         # remove VIP on shutdown
         if got_vip?
-          info 'removing VIP'
+          notice 'removing VIP'
           vip_handle! false
           vip_update_arp!
         end
 
         # stop LB on shutdown
         if lb_up?
-          info 'stopping load-balancer'
+          notice 'stopping load-balancer'
           lb_stop!
         end
 

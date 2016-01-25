@@ -1,6 +1,10 @@
 # == Class: portauthority::tools
 #
 class portauthority::tools {
+  package { 'iputils-arping':
+    ensure => present,
+  } ->
+
   package { 'etcd-tools':
     ensure   => latest,
     provider => 'gem',

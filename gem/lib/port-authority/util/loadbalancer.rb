@@ -12,7 +12,21 @@ module PortAuthority
         false
       end
 
-      def lb_create
+      def lb_update!
+        lb_stop! if lb_up?
+        lb_remove!
+        lb_create!
+        @lb_update_hook = false
+      end
+
+      def lb_remove!
+        Docker::Container.get(@config[:lb][:name]).delete
+      rescue Docker::Error::NotFoundError
+      end
+
+
+      def lb_create!
+        lb_remove!
         img = Docker::Image.create('fromImage' => @config[:lb][:image])
 
         # setup port bindings hash
@@ -21,19 +35,12 @@ module PortAuthority
           port_bindings[port] = [ { 'HostPort' => "#{port.split('/').first}" } ]
         end
 
-        begin
-          Docker::Container.get(@config[:lb][:name]).delete
-          info 'old LB removed'
-        rescue Docker::Error::NotFoundError
-          debug 'no LB found here, not removing'
-        end
-
         # create container with
         @lb_container = Docker::Container.create(
           'Image' => img.json['Id'],
           'name' => @config[:lb][:name],
           'Hostname' => @config[:lb][:name],
-          'Env' => [ "ETCDCTL_ENDPOINT=http://#{@config[:vip][:ip]}:4001" ],
+          'Env' => [ "ETCDCTL_ENDPOINT=#{@config[:etcd][:endpoints].join(',')}" ],
           'RestartPolicy' => { 'Name' => 'never' },
           'HostConfig' => {
             'PortBindings' => port_bindings,

@@ -1,9 +1,5 @@
 <%
-if scope['portauthority::cluster_members'].empty
-  endpoints = ['localhost']
-else
-  endpoints = scope['portauthority::cluster_members']
-end
+endpoints = scope['portauthority::cluster_members'].empty? ? ['localhost'] : scope['portauthority::cluster_members']
 -%>
 ---
 :debug: false
@@ -18,7 +14,8 @@ end
   :name: <%= scope['portauthority::lb_name'] %>
   :network: stackdocks
 :etcd:
-  :endpoints: <% endpoints.each do |e| -%>
+  :endpoints:
+<% endpoints.each do |e| -%>
     - http://<%= e %>:2379
 <% end -%>
   :interval: 2

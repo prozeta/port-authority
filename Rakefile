@@ -52,7 +52,8 @@ end
 namespace :gem do
   desc 'Build gem'
   task :build do
-    sh 'gem build -V gem/port-authority.gemspec'
+    sh 'cd gem'
+    sh 'gem build -V port-authority.gemspec'
   end
 
   desc 'Install local gem'

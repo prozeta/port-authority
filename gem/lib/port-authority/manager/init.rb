@@ -12,7 +12,7 @@ module PortAuthority
       include PortAuthority::Util::Logger
       include PortAuthority::Util::Helpers
 
-      def initialize(proc_name='dummy')
+      def initialize(proc_name = 'dummy')
         @config = config
         @exit = false
         @semaphore = { log: Mutex.new }

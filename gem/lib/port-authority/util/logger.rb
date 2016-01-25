@@ -47,7 +47,7 @@ module PortAuthority
           end
         else
           @semaphore[:log].synchronize do
-            $stdout.puts("#{Time.now.to_s} #{lvl.to_s[0].capitalize} (#{Thread.current[:name]} #{msg.to_s}")
+            $stdout.puts("#{Time.now.to_s} #{lvl.to_s[0].capitalize} (#{Thread.current[:name]}) #{msg.to_s}")
             $stdout.flush
           end
         end

@@ -1,5 +1,6 @@
 # rubocop:disable MethodLength, CyclomaticComplexity, Metrics/BlockNesting, Metrics/LineLength, Metrics/AbcSize, Metrics/PerceivedComplexity
 require 'ipaddr'
+require 'port-authority'
 require 'port-authority/util/vip'
 require 'port-authority/util/etcd'
 require 'port-authority/util/loadbalancer'
@@ -21,7 +22,7 @@ module PortAuthority
       def run
         # exit if not root
         if Process.euid != 0
-          $stderr.puts 'Must run under root user!'
+          $stderr.puts 'must run under root user!'
           exit! 1
         end
 
@@ -29,11 +30,10 @@ module PortAuthority
         setup 'pa-manager'
 
         # prepare semaphores
-        @semaphore = {
-          log: Mutex.new,
+        @semaphore.merge!({
           swarm: Mutex.new,
           icmp: Mutex.new
-        }
+        })
 
         # prepare threads
         @thread = {
@@ -73,10 +73,11 @@ module PortAuthority
 
           # the logic (should be self-explanatory ;))
           if status_swarm
+            debug 'i am the leader'
             if got_vip?
-              debug 'i am the leader with VIP, that is OK'
+              debug 'got VIP, that is OK'
             else
-              info 'i am the leader without VIP, checking whether it is free'
+              info 'no VIP here, checking whether it is free'
               if status_icmp
                 info 'VIP is still up! (ICMP)'
                 # FIXME: notify by sensu client socket
@@ -99,25 +100,26 @@ module PortAuthority
               end
             end
             if lb_up?
-              debug 'i am the leader and load-balancer is up, that is OK'
+              debug 'load-balancer is up, that is OK'
             else
-              info 'i am the leader and load-balancer is down, starting'
+              info 'load-balancer is down, starting'
               lb_start!
             end
           else
+            debug 'i am not the leader'
             if got_vip?
               info 'i got VIP and should not, removing'
               vip_handle! status_swarm
               info 'updating other hosts about change'
               vip_update_arp!
             else
-              debug 'i am not the leader and i do not have the VIP, that is OK'
+              debug 'no VIP here, that is OK'
             end
             if lb_up?
-              info 'i am not the leader and load-balancer is up, stopping'
+              info 'load-balancer is up, stopping'
               lb_stop!
             else
-              debug 'i am not the leader and load-balancer is down, that is OK'
+              debug 'load-balancer is down, that is OK'
             end
           end
 
@@ -132,8 +134,6 @@ module PortAuthority
         end
 
         # this is triggerred on exit
-        info 'SIGTERM received'
-        info 'waiting for threads to finish...'
         @thread.each_value(&:join)
 
         # remove VIP on shutdown

@@ -4,16 +4,37 @@ module PortAuthority
     module Threads
       def thread_swarm
         Thread.new do
-          debug 'starting swarm thread...'
-          etcd = etcd_connect!
-          until @exit
-            debug 'checking swarm state'
-            status = am_i_leader? etcd
-            @semaphore[:swarm].synchronize { @status_swarm = status }
-            debug "i am #{status ? 'the leader' : 'not the leader' }"
+          Thread.current[:name] = 'swarm'
+          info 'starting swarm thread...'
+          begin
+            etcd = etcd_connect!
+            until @exit
+              debug 'checking ETCD state'
+              etcd_healthy? etcd
+              debug 'checking swarm state'
+              status = am_i_leader? etcd
+              @semaphore[:swarm].synchronize { @status_swarm = status }
+              debug "i am #{status ? 'the leader' : 'not the leader' }"
+              sleep @config[:etcd][:interval]
+            end
+            info 'ending swarm thread...'
+          rescue PortAuthority::Errors::ETCDIsSick => e
+            err "#{e.class}: #{e.message}"
+            err "connection: " + e.etcd.to_s
+            @semaphore[:swarm].synchronize { @status_swarm = false }
             sleep @config[:etcd][:interval]
+            retry unless @exit
+          rescue PortAuthority::Errors::ETCDConnectFailed => e
+            err "#{e.class}: #{e.message}"
+            err "connection: " + e.etcd.to_s
+            @semaphore[:swarm].synchronize { @status_swarm = false }
+            sleep @config[:etcd][:interval]
+            retry unless @exit
+          rescue StandardError => e
+            err e.message
+            err e.backtrace.to_s
+            @exit = true
           end
-          info 'ending swarm thread...'
         end
       end
     end

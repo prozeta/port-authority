@@ -4,13 +4,28 @@ require 'etcd-tools'
 module PortAuthority
   module Util
     module Config
+
+      def config
+        cfg = default_config
+        if File.exist? '/etc/port-authority.yaml'
+          cfg = cfg.deep_merge YAML.load_file('/etc/port-authority.yaml')
+          puts 'loaded config from /etc/port-authority.yaml'
+        elsif File.exist? './port-authority.yaml'
+          cfg = cfg.deep_merge YAML.load_file('./port-authority.yaml')
+          puts 'loaded config from ./port-authority.yaml'
+        else
+          puts 'no config file loaded, using defaults'
+        end
+        cfg
+      end
+
       private
 
       def default_config
         { debug: false,
           syslog: false,
           etcd: {
-            endpoint: 'http://localhost:4001',
+            endpoints: ['http://localhost:2379'],
             interval: 1,
             timeout: 2
           },
@@ -40,20 +55,6 @@ module PortAuthority
             iproute: `which ip`.chomp
           }
         }
-      end
-
-      def config
-        cfg = default_config
-        if File.exist? '/etc/port-authority.yaml'
-          cfg = cfg.deep_merge YAML.load_file('/etc/port-authority.yaml')
-          puts 'loaded config from /etc/port-authority.yaml'
-        elsif File.exist? './port-authority.yaml'
-          cfg = cfg.deep_merge YAML.load_file('./port-authority.yaml')
-          puts 'loaded config from ./port-authority.yaml'
-        else
-          puts 'no config file loaded, using defaults'
-        end
-        cfg
       end
     end
   end

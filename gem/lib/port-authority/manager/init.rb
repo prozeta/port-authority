@@ -16,11 +16,16 @@ module PortAuthority
         @config = { debug: false }
         @config = config
         @exit = false
+        @semaphore = {
+          log: Mutex.new,
+        }
         @exit_sigs = %w(INT TERM)
-        @exit_sigs.each { |sig| Signal.trap(sig) { @exit = true } }
+        @exit_sigs.each { |sig| Signal.trap(sig) { info 'exit signal received, waiting for threads to exit...'; @exit = true } }
         Signal.trap('USR1') { @config[:debug] = false }
         Signal.trap('USR2') { @config[:debug] = true }
         Signal.trap('HUP')  { @config = config }
+        Thread.current[:name] = 'main'
+        info 'starting main thread'
       end
 
       def setup(proc_name, nice = -20)

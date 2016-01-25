@@ -11,7 +11,10 @@
   :name: stackdocks-controller
   :network: stackdocks
 :etcd:
-  :endpoint: http://localhost:4001
+  :endpoints:
+    - http://pa1:2379
+    - http://pa2:2379
+    - http://pa3:2379
   :interval: 1
   :timeout: 2
 :icmp:

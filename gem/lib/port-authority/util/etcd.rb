@@ -1,25 +1,21 @@
 require 'etcd'
+require 'etcd-tools/mixins'
 
 module PortAuthority
   module Util
     module Etcd
       # connect to ETCD
       def etcd_connect!
-        (host, port) = @config[:etcd][:endpoint].gsub(/^https?:\/\//, '').gsub(/\/$/, '').split(':')
-        etcd = ::Etcd.client(host: host, port: port)
-        begin
-          versions = JSON.parse(etcd.version)
-          info "conncted to ETCD at #{@config[:etcd][:endpoint]}"
-          info "server version: #{versions['etcdserver']}"
-          info "cluster version: #{versions['etcdcluster']}"
-          info "healthy: #{etcd.healthy?}"
-          return etcd
-        rescue Exception => e
-          err "couldn't connect to etcd at #{host}:#{port}"
-          err "#{e.message}"
-          @exit = true
-          return nil
-        end
+        endpoints = @config[:etcd][:endpoints].map { |e| e = e.gsub!(/^https?:\/\//, '').gsub(/\/$/, '').split(':'); { host: e[0], port: e[1].to_i } }
+        debug "parsed ETCD endpoints: #{endpoints.to_s}"
+        etcd = ::Etcd::Client.new(cluster: endpoints, read_timeout: @config[:etcd][:timeout])
+        etcd if etcd.version
+      rescue
+        raise PortAuthority::Errors::ETCDConnectFailed.new(@config[:etcd][:endpoints])
+      end
+
+      def etcd_healthy?(etcd)
+        raise PortAuthority::Errors::ETCDIsSick.new(@config[:etcd][:endpoints]) unless etcd.healthy?
       end
 
       def swarm_leader(etcd)
@@ -27,8 +23,8 @@ module PortAuthority
       end
 
       def am_i_leader?(etcd)
-        Socket.ip_address_list.map(){|a| a.ip_address }.member?(swarm_leader(etcd).split(':').first)
-      rescue Exception => e
+        Socket.ip_address_list.map(&:ip_address).member?(swarm_leader(etcd).split(':').first)
+      rescue StandardError => e
         false
       end
 

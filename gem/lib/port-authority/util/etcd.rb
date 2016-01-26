@@ -24,8 +24,6 @@ module PortAuthority
 
       def am_i_leader?(etcd)
         Socket.ip_address_list.map(&:ip_address).member?(swarm_leader(etcd).split(':').first)
-      rescue StandardError => e
-        false
       end
 
     end

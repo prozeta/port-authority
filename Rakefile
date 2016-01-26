@@ -18,7 +18,7 @@ namespace :puppet do
   desc 'Run tests'
   task :test do
     require './puppet-test'
-    PuppetTester.new('./puppet/', disabled_checks).run
+    PuppetTester.new('puppet/', disabled_checks).run
   end
 
   desc "Fix what's possible by puppet-lint"
@@ -26,9 +26,7 @@ namespace :puppet do
     runcmd = [
       'puppet-lint',
       '--error-level', 'error'
-    ]
-    runcmd += disabled_checks.map{ |check| "--no-#{check}-check" }
-    runcmd += [ '-f', '.' ]
+    ] + disabled_checks.map{ |check| "--no-#{check}-check" } + ['-f', '.']
     sh runcmd.join(' ')
   end
 
@@ -52,23 +50,22 @@ end
 namespace :gem do
   desc 'Build gem'
   task :build do
-    sh 'cd gem'
-    sh 'gem build -V port-authority.gemspec'
+    sh 'cd gem && gem build -V port-authority.gemspec'
   end
 
   desc 'Install local gem'
   task :install do
-    sh 'gem install port-authority-*.gem'
+    sh 'gem install gem/port-authority-*.gem'
   end
 
   desc 'Clean build gems'
   task :clean do
-    sh 'rm -f *.gem'
+    sh 'rm -f gem/*.gem'
   end
 
   desc 'Push new gem'
   task :push do
-    sh 'gem push port-authority-*.gem'
+    sh 'gem push gem/port-authority-*.gem'
   end
 
   desc 'Clean, build & install'

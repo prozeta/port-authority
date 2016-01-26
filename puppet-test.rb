@@ -6,10 +6,10 @@ require 'time'
 require 'open3'
 
 class PuppetTester
-  def initialize(path='modules',disabled_checks=[])
+  def initialize(path='modules/*',disabled_checks=[])
     @t_start = Time.now.to_f
     @path = path.sub(/\/$/, '')
-    @modules = Dir[@path + '/*'].select{|f| File.directory? f}.sort
+    @modules = Dir[@path].select{|f| File.directory? f}.sort
     @pe = Puppet.lookup(:current_environment)
     @erb_bin = `/bin/which erb`.sub(/\n$/, '')
     @ruby_bin = `/bin/which ruby`.sub(/\n$/, '')
@@ -133,7 +133,7 @@ class PuppetTester
   def run
     r = true
     @modules.each do |mod|
-      puts purple("\nTesting module '#{mod.split('/')[1]}'")
+      puts purple("\nTesting module #{cyan(mod.split('/').last)}")
       parser_validate(mod) || ( r = false; break )
       erb_validate(mod)    || ( r = false; break )
       lint(mod)            || ( r = false; break )

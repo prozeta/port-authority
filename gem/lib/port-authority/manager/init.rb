@@ -13,9 +13,9 @@ module PortAuthority
       include PortAuthority::Util::Helpers
 
       def initialize(proc_name = 'dummy')
+        @semaphore = { log: Mutex.new }
         @config = config
         @exit = false
-        @semaphore = { log: Mutex.new }
         Thread.current[:name] = 'main'
         syslog_init proc_name if @config[:syslog]
         setup proc_name
@@ -23,8 +23,14 @@ module PortAuthority
         debug 'setting signal handling'
         @exit_sigs = %w(INT TERM)
         @exit_sigs.each { |sig| Signal.trap(sig) { @exit = true } }
-        Signal.trap('USR2') { @config[:debug] = !@config[:debug] }
-        Signal.trap('HUP')  { @config = config }
+        Signal.trap('USR2') do
+          if @config[:debug]
+            @config[:debug] = false
+          else
+            @config[:debug] = true
+          end
+        end
+        Signal.trap('HUP') { @config = config }
       end
 
       def setup(proc_name, nice = -20)

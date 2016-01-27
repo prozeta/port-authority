@@ -1,19 +1,31 @@
-require 'puppet/provider/etcd'
+require File.join(File.dirname(__FILE__), '..', 'etcd')
 
-Puppet::Type.type(:etcd_set_hash).provide :ruby do
+Puppet::Type.type(:etcd_set_hash).provide(:ruby, :parent => Puppet::Provider::Etcd) do
   confine :feature => :etcd_tools
 
-  mk_resource_methods
-
-  def self.instances
+  def create
+    # code
   end
 
-  def self.prefetch(resources)
-    resources.each do |name, resource|
-      Puppet.debug "prefetching for #{name}"
-      etcd = etcd_init(resource[:host], resource[:port])
-      resource.provider = new(, )
-    end
+  def destroy
+    # code
+  end
+
+  def exists?
+    # code
+  end
+
+  def hash
+    # code
+  end
+
+  def hash=(should)
+    # code
+  end
+
+
+  def initialize
+    @etcd = etcd_connect!
   end
 
 end

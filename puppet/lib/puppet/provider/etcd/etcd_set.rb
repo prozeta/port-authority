@@ -1,11 +1,9 @@
 require 'puppet/provider/etcd'
 
-Puppet::Type.type(:etcd_set).provide(:etcd, parent: Puppet::Provider::Etcd) do
-  confine :feature => :etcd
+Puppet::Type.type(:etcd_set).provide :ruby do
+  confine :feature => :etcd_tools
 
   mk_resource_methods
 
-  def initialize(var, *args)
-  end
 
 end

@@ -1,5 +1,5 @@
-Puppet::Type.newtype :etcd_set do
-  @doc = "Set ETCD key"
+Puppet::Type.newtype :etcd_set_hash do
+  @doc = "Fills PA-ETCD with values from provided Hash"
 
   ensurable do
     newvalue :synchronized do
@@ -16,21 +16,23 @@ Puppet::Type.newtype :etcd_set do
   end
 
   newparam :path do
+    desc 'Base ETCD path'
     isnamevar
-    desc 'ETCD key path'
   end
 
-  newproperty :value do
-    desc 'ETCD key value'
-    defaultto ''
+  newproperty :hash do
+    desc 'Hash with data'
+    def in_sync?(is)
+      is.checksum == should.checksum
+    end
   end
 
-  newparam :host do
+  newparam(:host) do
     desc 'ETCD host'
     defaultto 'localhost'
   end
 
-  newparam :port  do
+  newparam(:port) do
     desc 'ETCD port'
     defaultto 2379
   end

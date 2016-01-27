@@ -1,11 +1,12 @@
 require 'puppet/provider/etcd'
 
-Puppet::Type.type(:etcd_fill).provide(:etcd, parent: Puppet::Provider::Etcd) do
-  confine :feature => :etcd
-
-  attr_accessor :etcd
+Puppet::Type.type(:etcd_set_hash).provide :ruby do
+  confine :feature => :etcd_tools
 
   mk_resource_methods
+
+  def self.instances
+  end
 
   def self.prefetch(resources)
     resources.each do |name, resource|
@@ -13,10 +14,6 @@ Puppet::Type.type(:etcd_fill).provide(:etcd, parent: Puppet::Provider::Etcd) do
       etcd = etcd_init(resource[:host], resource[:port])
       resource.provider = new(, )
     end
-  end
-
-  def flush
-
   end
 
 end

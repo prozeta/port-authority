@@ -102,11 +102,14 @@ define pa_service (
   $service_prefix = 'docker-',
   $privileged = false,
   $endpoint = $::ipaddress_eth0,
+  $extra_parameters = '',
 ) {
 
   $cluster_host_id = inline_template('<%= @hostname.match(/[0-9]+$/).to_s %>')
   $env_final = [ "ETCDCTL_ENDPOINT=${endpoint}", "DOCKER_HOST=${::ipaddress_eth0}" ] + $env
   $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
+
+  $extra_parameters_final = "--name=${title}${cluster_host_id} " + $extra_parameters
 
   if $directory {
     $volumes_final = [ "/srv/${title}:${directory}" ] + $volumes
@@ -131,7 +134,7 @@ define pa_service (
     depends          => $depends_final,
     privileged       => $privileged,
     use_name         => false,
-    extra_parameters => "--name=${title}${cluster_host_id}",
+    extra_parameters => $extra_parameters_final,
     service_prefix   => $service_prefix,
     pull_on_start    => false,
   }

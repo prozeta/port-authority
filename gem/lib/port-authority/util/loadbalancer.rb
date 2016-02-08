@@ -35,8 +35,7 @@ module PortAuthority
           port_bindings[port] = [ { 'HostPort' => "#{port.split('/').first}" } ]
         end
 
-        # create container with
-        @lb_container = Docker::Container.create(
+        cont_def = {
           'Image' => img.json['Id'],
           'name' => @config[:lb][:name],
           'Hostname' => @config[:lb][:name],
@@ -46,7 +45,20 @@ module PortAuthority
             'PortBindings' => port_bindings,
             'NetworkMode' => @config[:lb][:network]
           }
-        )
+        }
+
+        if @config[:lb][:log_dest] != ''
+          cont_def['HostConfig']['LogConfig'] = {
+            'Type' => 'gelf',
+            'Config' => {
+              'gelf-address' => @config[:lb][:log_dest],
+              'tag' => '{{.Name}}'
+            }
+          }
+        end
+
+        # create container with
+        @lb_container = Docker::Container.create(cont_def)
       end
 
       def lb_up?

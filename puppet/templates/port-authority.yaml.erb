@@ -13,6 +13,7 @@ endpoints = scope['portauthority::cluster_members'].empty? ? ['localhost'] : sco
   :image: <%= scope['portauthority::lb_image'] %>
   :name: <%= scope['portauthority::lb_name'] %>
   :network: stackdocks
+  :log_dest: <%= scope['portauthority::lb_log_destination'] %>
 :etcd:
   :endpoints:
 <% endpoints.each do |e| -%>

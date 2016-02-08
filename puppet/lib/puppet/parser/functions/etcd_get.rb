@@ -7,7 +7,8 @@ module Puppet
         hosts = args[1] || [{ host: lookupvar('fqdn'), port: 2379 }]
         timeout = args[2] || 5
         warning hosts.to_json
-        ::Etcd::Client.new(cluster: hosts, read_timeout: timeout).get(args[0]).value
+        etcd = ::Etcd::Client.new(cluster: hosts, read_timeout: timeout)
+        etcd.get(args[0]).value
       end
     end
   end

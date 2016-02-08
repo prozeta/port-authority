@@ -36,6 +36,7 @@ class portauthority (
   $host_ip = $::ipaddress_eth0,
   $lb_image = 'prozeta/pa-haproxy:latest',
   $lb_name = 'pa-loadbalancer',
+  $lb_log_destination = '',
   $default_bridge_ip = '192.168.255.1/24',
   $gwbridge_network = '192.168.254.0/24',
   $gwbridge_address = '192.168.254.1',

@@ -47,7 +47,8 @@ module PortAuthority
             image: 'docker-registry.prz/stackdocks/haproxy:latest',
             name: 'lb',
             network: 'overlay',
-            docker_endpoint: 'unix:///var/run/docker.sock'
+            docker_endpoint: 'unix:///var/run/docker.sock',
+            log_dest: '',
           },
           commands: {
             arping: `which arping`.chomp,

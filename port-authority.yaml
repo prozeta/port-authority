@@ -10,6 +10,7 @@
   :image: docker-registry.prz/stackdocks/haproxy:latest
   :name: stackdocks-controller
   :network: stackdocks
+  :log_dest: udp://mon1.svc.cloud.prz:515
 :etcd:
   :endpoints:
     - http://pa1:2379

@@ -40,8 +40,6 @@ class portauthority (
   $gwbridge_network = '192.168.254.0/24',
   $gwbridge_address = '192.168.254.1',
   $dns = ['8.8.8.8', '4.4.4.4'],
-  $logger_tag = 'latest',
-  $registrator_tag = 'latest',
   $swarm_tag = 'latest',
 ) {
 
@@ -109,7 +107,7 @@ define pa_service (
   $env_final = [ "ETCDCTL_ENDPOINT=${endpoint}", "DOCKER_HOST=${::ipaddress_eth0}" ] + $env
   $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
 
-  $extra_parameters_final = "--name=${title}${cluster_host_id} " + $extra_parameters
+  $extra_parameters_final = "--name=${title}${cluster_host_id} ${extra_parameters}"
 
   if $directory {
     $volumes_final = [ "/srv/${title}:${directory}" ] + $volumes

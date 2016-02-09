@@ -22,11 +22,6 @@ class portauthority::services () {
       #   hasrestart => true,
       #   hasstatus  => true,
       # }
-    } else {
-      # service { 'pa-manager':
-      #   ensure => stopped,
-      #   enable => false,
-      # }
     }
     docker::run { 'swarm-agent':
       image    => 'swarm',

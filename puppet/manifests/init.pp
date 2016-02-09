@@ -44,14 +44,20 @@ class portauthority (
   $swarm_tag = 'latest',
 ) {
 
+  # detect whether cluster is enabled
   if $cluster_members == [] {
     $cluster_enabled = false
   } else {
     $cluster_enabled = true
   }
 
-  $cluster_manager = inline_template('<%= @cluster_members.index(scope["::fqdn"]) ? true : false %>')
+  # detect whether i'm one of cluster managers
+  $cluster_manager = false
+  each($cluster_members) |$m| {
+    if $m == $::fqdn { $cluster_manager = true }
+  }
 
+  # do we have a private registry?
   if $portauthority::private_registry != '' {
     $registry_cfg = "--insecure-registry ${private_registry} "
   } else {

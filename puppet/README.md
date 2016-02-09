@@ -78,6 +78,7 @@ Of course, you can use Hiera ;)
 Returns a value of an ETCD key.
 
 The function takes 3 arguments:
+
 1. absolute key path (required)
 2. array of hashes with keys ```host``` and ```port``` to define the cluster to connect to. Defaults to ```[ { host: lookupvar('fqdn'), port 2379 } ]```
 3. timeout for ETCD requests in seconds. Defaults to ```3```.
@@ -91,6 +92,7 @@ $variable = etcd_get('/some/key')
 Returns an Array of ETCD key names from a path.
 
 The function takes 3 arguments:
+
 1. absolute key path (required)
 2. array of hashes with keys ```host``` and ```port``` to define the cluster to connect to. Defaults to ```[ { host: lookupvar('fqdn'), port 2379 } ]```
 3. timeout for ETCD requests in seconds. Defaults to ```3```.
@@ -105,6 +107,7 @@ $variable = etcd_get_keys('/some')
 Returns a Hash from ETCD path.
 
 The function takes 3 arguments:
+
 1. absolute key path (required)
 2. array of hashes with keys ```host``` and ```port``` to define the cluster to connect to. Defaults to ```[ { host: lookupvar('fqdn'), port 2379 } ]```
 3. timeout for ETCD requests in seconds. Defaults to ```3```.

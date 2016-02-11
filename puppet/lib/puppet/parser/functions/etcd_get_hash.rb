@@ -5,8 +5,9 @@ module Puppet::Parser::Functions
               type: :rvalue,
               arity: -2,
               doc: 'Returns a Hash from ETCD path') do |args|
-    hosts = args[1] || [{ host: lookupvar('fqdn'), port: 2379 }]
-    timeout = args[2] || 5
-    ::Etcd::Client.new(cluster: hosts, read_timeout: timeout).get_hash(args[0])
+    cl = args[1].map!{ |h| { host: h['host'], port: h['port'].to_i } } || [{ host: lookupvar('fqdn'), port: 2379 }]
+    timeout = args[2] || 10
+    path = args[0]
+    Etcd::Client.new(cluster: cl, read_timeout: timeout).get_hash(path)
   end
 end

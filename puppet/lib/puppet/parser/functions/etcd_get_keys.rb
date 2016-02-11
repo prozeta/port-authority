@@ -5,8 +5,9 @@ module Puppet::Parser::Functions
               type: :rvalue,
               arity: -2,
               doc: 'Returns an Array of ETCD key names from a path') do |args|
-    hosts = args[1] || [{ host: lookupvar('fqdn'), port: 2379 }]
-    timeout = args[2] || 5
-    ::Etcd::Client.new(cluster: hosts, read_timeout: timeout).get(args[0]).children.map(&:key).map {|k| k.split('/').last}
+    cl = args[1].map!{ |h| { host: h['host'], port: h['port'].to_i } } || [{ host: lookupvar('fqdn'), port: 2379 }]
+    timeout = args[2] || 10
+    path = args[0]
+    Etcd::Client.new(cluster: cl, read_timeout: timeout).get(path).children.map(&:key).map {|k| k.split('/').last}
   end
 end

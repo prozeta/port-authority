@@ -34,6 +34,7 @@ class portauthority (
   $private_registry = '',
   $log_destination = '',
   $host_ip = $::ipaddress_eth0,
+  $host_fqdn = $::fqdn,
   $lb_image = 'prozeta/pa-haproxy:latest',
   $lb_name = 'pa-loadbalancer',
   $lb_log_destination = '',

@@ -52,10 +52,7 @@ class portauthority (
   }
 
   # detect whether i'm one of cluster managers
-  $cluster_manager = false
-  each($cluster_members) |$m| {
-    if $m == $::fqdn { $cluster_manager = true }
-  }
+  $cluster_manager = inline_template('<%= @cluster_members.include?(@fqdn) %>')
 
   # do we have a private registry?
   if $portauthority::private_registry != '' {

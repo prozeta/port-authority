@@ -62,14 +62,14 @@ class portauthority (
     $registry_cfg = ''
   }
 
-  if $cluster_enabled {
+  if ( $cluster_enabled == true ) {
     $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${host_ip}:4243"
   } else {
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
 
-  if $cluster_manager {
+  if ( $cluster_manager == true ) {
     class { 'portauthority::etcd':
       before => Class['docker'],
     }

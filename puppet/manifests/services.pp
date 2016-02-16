@@ -7,8 +7,8 @@ class portauthority::services () {
     service_prefix => 'pa-'
   }
 
-  if $portauthority::cluster_enabled {
-    if $portauthority::cluster_manager {
+  if ( $portauthority::cluster_enabled == true ) {
+    if ( $portauthority::cluster_manager == true ) {
       docker::run { 'swarm-manager':
         image    => 'swarm',
         command  => "manage --replication --replication-ttl '10s' --addr ${portauthority::host_ip}:2375 etcd://${etcd_hosts_swarm}/_pa",

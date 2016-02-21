@@ -53,7 +53,12 @@ class portauthority (
   }
 
   # detect whether i'm one of cluster managers
-  $cluster_manager = inline_template('<%= @cluster_members.include?(@fqdn) %>')
+  $filtered_members = $cluster_members.filter |$m| { $m == $::fqdn }
+  if $filtered_members == [ $::fqdn ] {
+    $cluster_manager = true
+  } else {
+    $cluster_manager = false
+  }
 
   # do we have a private registry?
   if $portauthority::private_registry != '' {
@@ -62,14 +67,14 @@ class portauthority (
     $registry_cfg = ''
   }
 
-  if ( $cluster_enabled == true ) {
+  if $cluster_enabled == true {
     $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${host_ip}:4243"
   } else {
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
 
-  if ( $cluster_manager == true ) {
+  if $cluster_manager == true {
     class { 'portauthority::etcd':
       before => Class['docker'],
     }
@@ -108,11 +113,19 @@ define pa_service (
   $extra_parameters = '',
 ) {
 
-  $cluster_host_id = inline_template('<%= @hostname.match(/[0-9]+$/).to_s %>')
-  $env_final = [ "ETCDCTL_ENDPOINT=${endpoint}", "DOCKER_HOST=${::ipaddress_eth0}" ] + $env
-  $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
+  if $portauthority::cluster_manager == true {
+    $cluster_host_id = inline_template('<%= @hostname.match(/[0-9]+$/).to_s %>')
+    $container_hostname = "${title}${cluster_host_id}"
+    $container_title = $title
+    $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
+  } else {
+    $container_hostname = $::hostname
+    $container_title = $title
+    $depends_final = $depends
+  }
 
-  $extra_parameters_final = "--name=${title}${cluster_host_id} ${extra_parameters}"
+  $env_final = [ "ETCDCTL_ENDPOINT=${endpoint}", "DOCKER_HOST=${::ipaddress_eth0}" ] + $env
+  $extra_parameters_final = "--name=${container_hostname} ${extra_parameters}"
 
   if $directory {
     $volumes_final = [ "/srv/${title}:${directory}" ] + $volumes
@@ -127,10 +140,10 @@ define pa_service (
     $volumes_final = $volumes
   }
 
-  docker::run { "${title}${cluster_host_id}":
+  docker::run { $container_title:
     image            => $image,
     env              => $env_final,
-    hostname         => "${title}${cluster_host_id}",
+    hostname         => $container_hostname,
     ports            => $ports,
     net              => $net,
     volumes          => $volumes_final,
@@ -140,28 +153,15 @@ define pa_service (
     service_prefix   => $service_prefix,
     pull_on_start    => false,
   }
-
-  # exec { "container_name_fix_${title}":
-  #   command     => "/usr/bin/perl -i -ne 'print unless /--name\ ${title}.*/' /etc/init.d/${service_prefix}${title}",
-  #   refreshonly => true,
-  #   subscribe   => File["/etc/init.d/${service_prefix}${title}"],
-  #   before      => Service["${service_prefix}${title}"],
-  # }
-
 }
 
 # == Define: pa_network
 #
 define pa_network (
   $address = '192.168.64.0/22',
-  $swarm_ip = $::ipaddress_eth0,
-  $swarm_port = 2375,
 ) {
-
-  exec { "pa_network_overlay_${title}":
-    unless      => "docker network inspect ${title} >/dev/null 2>&1",
-    command     => "docker network create -d overlay --subnet=${address} ${title} >/dev/null 2>&1",
-    path        => '/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin:/usr/local/sbin',
-    environment => [ "DOCKER_HOST=${swarm_ip}:${swarm_port}" ],
+  docker_network { $title:
+    driver => 'overlay',
+    subnet => $address,
   }
 }

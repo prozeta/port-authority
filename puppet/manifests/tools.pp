@@ -1,7 +1,8 @@
 # == Class: portauthority::tools
 #
 class portauthority::tools {
-  package { 'iputils-arping':
+  package { [ 'iputils-arping',
+              'ruby1.9.1-dev' ]:
     ensure => present,
   } ->
 

@@ -1,6 +1,6 @@
 {
   "name": "prozeta/portauthority",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "author": "Radek blufor Slavicinsky",
   "license": "GPL-2.0",
   "summary": "Puppet module to bootstrap Port Authority",
@@ -15,6 +15,6 @@
     }
    ],
   "dependencies": [
-    { "name": "garethr/docker", "version_requirement": ">=4.1.1" }
+    { "name": "garethr/docker", "version_requirement": ">=5.0.0" }
   ]
 }

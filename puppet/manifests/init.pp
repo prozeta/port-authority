@@ -136,7 +136,6 @@ define pa_service (
     volumes          => $volumes_final,
     depends          => $depends_final,
     privileged       => $privileged,
-    use_name         => false,
     extra_parameters => $extra_parameters_final,
     service_prefix   => $service_prefix,
     pull_on_start    => false,

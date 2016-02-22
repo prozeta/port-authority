@@ -24,9 +24,9 @@ class portauthority::tools {
   } ->
 
   file { '/etc/init/pa-manager.conf':
-    ensure  => file,
-    mode    => '0644',
-    owner   => 'root',
-    content => 'source:///portauthority/pa-manager.upstart',
+    ensure => file,
+    mode   => '0644',
+    owner  => 'root',
+    source => 'puppet:///modules/portauthority/pa-manager.upstart',
   }
 }

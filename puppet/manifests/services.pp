@@ -11,7 +11,7 @@ class portauthority::services () {
     if ( $portauthority::cluster_manager == true ) {
       docker::run { 'swarm-manager':
         image   => 'swarm',
-        command => "manage --replication --replication-ttl '10s' --addr ${portauthority::host_ip}:2375 etcd://${etcd_hosts_swarm}/_pa",
+        command => "manage --replication --replication-ttl '10s' --addr ${portauthority::docker_listen_ip}:2375 etcd://${etcd_hosts_swarm}/_pa",
         net     => 'host',
         depends => [ 'swarm-agent' ],
       } # ->
@@ -24,7 +24,7 @@ class portauthority::services () {
     }
     docker::run { 'swarm-agent':
       image   => 'swarm',
-      command => "join --addr ${portauthority::host_ip}:4243 --heartbeat '2s' --ttl '10s' etcd://${etcd_hosts_swarm}/_pa",
+      command => "join --addr ${portauthority::docker_listen_ip}:4243 --heartbeat '2s' --ttl '10s' etcd://${etcd_hosts_swarm}/_pa",
       net     => 'host',
     }
   }

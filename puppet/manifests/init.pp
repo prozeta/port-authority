@@ -33,7 +33,6 @@ class portauthority (
   $cluster_members = [],
   $private_registry = '',
   $log_destination = '',
-  $host_ip = $::ipaddress_eth0,
   $host_fqdn = $::fqdn,
   $lb_image = 'prozeta/pa-haproxy:latest',
   $lb_name = 'pa-loadbalancer',
@@ -67,9 +66,18 @@ class portauthority (
     $registry_cfg = ''
   }
 
+  #
+  if ! empty($::ipaddress_eth0) {
+    $docker_listen_ip = $::ipaddress_eth0
+  } elsif ! emptu($::ipaddress_mgmt) {
+    $docker_listen_ip = $::ipaddress_mgmt
+  } else {
+    $docker_listen_ip = $::ipaddress
+  }
+
   if $cluster_enabled == true {
     $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
-    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${host_ip}:4243"
+    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${docker_listen_ip}:4243"
   } else {
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
@@ -83,7 +91,7 @@ class portauthority (
   class { 'docker':
     dns              => $portauthority::dns,
     extra_parameters => $final_extra_parameters,
-    tcp_bind         => "tcp://${portauthority::host_ip}:4243",
+    tcp_bind         => "tcp://${portauthority::docker_listen_ip}:4243",
   } ->
 
   class { 'portauthority::tools': } ->

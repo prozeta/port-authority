@@ -69,7 +69,7 @@ class portauthority (
   #
   if ! empty($::ipaddress_eth0) {
     $docker_listen_ip = $::ipaddress_eth0
-  } elsif ! emptu($::ipaddress_mgmt) {
+  } elsif ! empty($::ipaddress_mgmt) {
     $docker_listen_ip = $::ipaddress_mgmt
   } else {
     $docker_listen_ip = $::ipaddress

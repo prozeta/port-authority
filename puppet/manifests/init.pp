@@ -124,8 +124,8 @@ define pa_service (
   if $portauthority::cluster_manager == true {
     $cluster_host_id = inline_template('<%= @hostname.match(/[0-9]+$/).to_s %>')
     $container_hostname = "${title}${cluster_host_id}"
-    $container_title = $title
-    $depends_final = inline_template('<%= @depends.map { |d| d+ "#{@cluster_host_id}" } %>')
+    $container_title = "${title}${cluster_host_id}"
+    $depends_final = $depends
   } else {
     $container_hostname = $::hostname
     $container_title = $title
@@ -141,7 +141,7 @@ define pa_service (
     file { "/srv/${title}":
       ensure => directory,
       mode   => '0644',
-      before => Docker::Run["${title}${cluster_host_id}"],
+      before => Docker::Run[$container_title],
     }
 
   } else {

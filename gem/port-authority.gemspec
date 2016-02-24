@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = 'port-authority'
-  s.version               = '0.4.6'
+  s.version               = '0.4.7'
   s.date                  = Time.now.strftime('%Y-%m-%d')
   s.summary               = 'Port Authority'
   s.description           = 'CLI Tools for PortAuthority'

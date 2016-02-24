@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'port-authority/services'
+PortAuthority::Services::App.new.run

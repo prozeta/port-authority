@@ -37,6 +37,7 @@ class portauthority (
   $lb_image = 'prozeta/pa-haproxy:latest',
   $lb_name = 'pa-loadbalancer',
   $lb_log_destination = '',
+  $docker_listen_ip = '',
   $default_bridge_ip = '192.168.255.1/24',
   $gwbridge_network = '192.168.254.0/24',
   $gwbridge_address = '192.168.254.1',
@@ -66,18 +67,17 @@ class portauthority (
     $registry_cfg = ''
   }
 
-  #
-  if ! empty($::ipaddress_eth0) {
-    $docker_listen_ip = $::ipaddress_eth0
-  } elsif ! empty($::ipaddress_mgmt) {
-    $docker_listen_ip = $::ipaddress_mgmt
+  # docker listen IP detection
+  if empty($portauthority::docker_listen_ip) {
+    if    ! empty($::ipaddress_eth0) { $final_docker_listen_ip = $::ipaddress_eth0 }
+    elsif ! empty($::ipaddress)      { $final_docker_listen_ip = $::ipaddress }
   } else {
-    $docker_listen_ip = $::ipaddress
+    $final_docker_listen_ip = $portauthority::docker_listen_ip
   }
 
   if $cluster_enabled == true {
     $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
-    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${docker_listen_ip}:4243"
+    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${final_docker_listen_ip}:4243"
   } else {
     $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip}"
   }
@@ -91,7 +91,7 @@ class portauthority (
   class { 'docker':
     dns              => $portauthority::dns,
     extra_parameters => $final_extra_parameters,
-    tcp_bind         => "tcp://${portauthority::docker_listen_ip}:4243",
+    tcp_bind         => "tcp://${final_docker_listen_ip}:4243",
   } ->
 
   class { 'portauthority::tools': } ->

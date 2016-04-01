@@ -19,6 +19,7 @@ module PortAuthority
           rescue PortAuthority::Errors::ETCDConnectFailed => e
             err "#{e.class}: #{e.message}"
             err "connection: " + e.etcd.to_s
+            err "  #{e.backtrace.to_s}"
             @semaphore[:swarm].synchronize { @status_swarm = false }
             sleep @config[:etcd][:interval]
             retry unless @exit

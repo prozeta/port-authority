@@ -52,7 +52,7 @@ module PortAuthority
             'Type' => 'gelf',
             'Config' => {
               'gelf-address' => @config[:lb][:log_dest],
-              'tag' => '{{.Name}}'
+              'tag' =>  Socket.gethostbyname(Socket.gethostname).first + '/{{.Name}}/{{.ID}}'
             }
           }
         end

@@ -1,0 +1,19 @@
+start on (filesystem and net-device-up IFACE!=lo)
+stop on runlevel [06]
+
+respawn
+
+kill timeout 30
+
+setuid etcd
+setgid etcd
+
+script
+  ETCD_NAME="$(hostname -f)"
+  ETCD_DATA_DIR="/var/lib/etcd/${ETCD_NAME}"
+  test -f /etc/default/etcd && . /etc/default/etcd
+  test -f /etc/etcd.conf && . /etc/etcd.conf
+  cd $ETCD_DATA_DIR
+
+  /usr/sbin/etcd
+end script

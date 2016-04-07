@@ -8,24 +8,27 @@ class portauthority::services () {
   }
 
   if ( $portauthority::cluster_enabled == true ) {
+
+    docker::run { 'swarm-agent':
+      image   => 'swarm',
+      command => "join --addr ${portauthority::docker_listen_ip}:4243 --heartbeat '2s' --ttl '10s' etcd://${etcd_hosts_swarm}/_pa",
+      net     => 'host',
+    }
+
     if ( $portauthority::cluster_manager == true ) {
       docker::run { 'swarm-manager':
         image   => 'swarm',
         command => "manage --replication --replication-ttl '10s' --addr ${portauthority::docker_listen_ip}:2375 etcd://${etcd_hosts_swarm}/_pa",
         net     => 'host',
         depends => [ 'swarm-agent' ],
-      } # ->
-      # service { 'pa-manager':
-      #   ensure     => running,
-      #   enable     => true,
-      #   hasrestart => true,
-      #   hasstatus  => true,
-      # }
+        require => Docker::Run['swarm-agent']
+      } ->
+      service { 'pa-manager':
+        ensure     => running,
+        enable     => true,
+      }
     }
-    docker::run { 'swarm-agent':
-      image   => 'swarm',
-      command => "join --addr ${portauthority::docker_listen_ip}:4243 --heartbeat '2s' --ttl '10s' etcd://${etcd_hosts_swarm}/_pa",
-      net     => 'host',
-    }
+
+
   }
 }

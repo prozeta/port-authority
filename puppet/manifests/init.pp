@@ -43,7 +43,14 @@ class portauthority (
   $gwbridge_address = '192.168.254.1',
   $dns = ['8.8.8.8', '4.4.4.4'],
   $swarm_tag = 'latest',
+  $debug = false,
 ) {
+
+  if $debug {
+    $debug_param = '-D'
+  } else {
+    $debug_param = ''
+  }
 
   # detect whether cluster is enabled
   if $cluster_members == [] {
@@ -77,9 +84,9 @@ class portauthority (
 
   if $cluster_enabled == true {
     $docker_cluster_store = inline_template('<%= "etcd://" + @cluster_members.map { |host| host + ":2379" }.join(",") + "/_pa" %>')
-    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${final_docker_listen_ip}:4243 --userland-proxy=false"
+    $final_extra_parameters = "${debug_param} ${registry_cfg} --bip ${portauthority::default_bridge_ip} --cluster-store=${docker_cluster_store} --cluster-advertise=${final_docker_listen_ip}:4243 --userland-proxy=false"
   } else {
-    $final_extra_parameters = "${registry_cfg} --bip ${portauthority::default_bridge_ip} --userland-proxy=false"
+    $final_extra_parameters = "${debug_param} ${registry_cfg} --bip ${portauthority::default_bridge_ip} --userland-proxy=false"
   }
 
   if $cluster_manager == true {

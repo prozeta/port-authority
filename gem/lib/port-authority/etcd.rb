@@ -4,7 +4,7 @@ module PortAuthority
   class Etcd < Etcd::Client
 
     def self.cluster_connect config
-      endpoints = config[:endpoints].map {|ep| Hash[[:host, :port].zip(ep.scan /^https?:\/\/([0-9a-zA-Z\.-_]+):([0-9]+)\//)]}
+      endpoints = config[:endpoints].map {|ep| Hash[[:host, :port].zip(ep.match(/^(?:https?:\/\/)?([0-9a-zA-Z\.-_]+):([0-9]+)\/?/).captures)]}
       timeout = config[:timeout].to_i
       PortAuthority::Etcd.new(cluster: endpoints, read_timeout: timeout)
     end

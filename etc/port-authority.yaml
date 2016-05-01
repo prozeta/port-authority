@@ -3,7 +3,7 @@
 :syslog: false
 :etcd:
   :endpoints:
-    - http://pa1:2379
-    - http://pa2:2379
-    - http://pa3:2379
+    - http://ctrl1.dev3.lab.prz:2379
+    - http://ctrl2.dev3.lab.prz:2379
+    - http://ctrl3.dev3.lab.prz:2379
   :timeout: 2

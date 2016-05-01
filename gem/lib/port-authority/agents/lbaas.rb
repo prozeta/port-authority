@@ -7,24 +7,25 @@ require 'port-authority/mechanism/floating_ip'
 module PortAuthority
   module Agents
     class LBaaS < PortAuthority::Agent
+      include PortAuthority::Mechanism
 
       def run
-        setup daemonize: Config.daemonize, nice: -10, root: true
+        setup(daemonize: Config.daemonize, nice: -10, root: true)
+        Signal.trap('HUP') { Config.load! && LoadBalancer.init! && FloatingIP.init! }
+        Signal.trap('USR1') { Logger.debug! }
         Signal.trap('USR2') { @lb_update_hook = true }
         @status_swarm = false
-        @status_icmp = false
         @etcd = PortAuthority::Etcd.cluster_connect Config.etcd
 
         thr_create(:swarm, Config.lbaas[:swarm_interval] || Config.lbaas[:interval]) do
           begin
-            Logger.debug 'checking swarm state'
+            Logger.debug 'Checking Swarm state'
             status = @etcd.am_i_swarm_leader?
             thr_safe { @status_swarm = status }
-            Logger.debug "i am #{status ? '' : 'NOT' } the swarm leader"
+            Logger.debug "I am Swarm #{status ? 'leader' : 'follower' }"
           rescue StandardError => e
             Logger.error [ e.class, e.message ].join(': ')
-            Logger.error "  connection: " + e.etcd.to_s
-            Logger.error "  #{e.backtrace.to_s}"
+            e.backtrace.each {|line| Logger.debug "  #{line}"}
             thr_safe { @status_swarm = false }
             sleep(Config.lbaas[:swarm_interval] || Config.lbaas[:interval])
             retry unless exit?
@@ -33,31 +34,33 @@ module PortAuthority
 
         thr_start
 
-        LoadBalancer.get || LoadBalancer.create!
+        FloatingIP.init!
+        LoadBalancer.init!
+        LoadBalancer.container || ( LoadBalancer.pull! && LoadBalancer.create! )
 
-        Logger.debug 'waiting for threads to gather something...'
+        Logger.debug 'Waiting for threads to gather something...'
         sleep Config.lbaas[:interval]
         first_cycle = true
         status_time = Time.now.to_i - 60
 
         until exit?
-          status_swarm = status_icmp = false if first_cycle
+          status_swarm = false if first_cycle
           if @lb_update_hook
-            Logger.notice 'LoadBalancer image update triggerred'
+            Logger.notice 'LoadBalancer update triggerred'
             LoadBalancer.update!
-            Logger.notice 'LoadBalancer image update finished'
+            @lb_update_hook = false
+            Logger.notice 'LoadBalancer update finished'
           end
           sleep Config.lbaas[:interval]
-          thr_safe(:icmp) { status_icmp = @status_icmp }
           thr_safe(:swarm) { status_swarm = @status_swarm }
           # main logic
           if status_swarm
             # handle FloatingIP on leader
-            Logger.debug 'i am the LEADER'
+            Logger.debug 'I am the LEADER'
             if FloatingIP.up?
-              Logger.debug 'got FloatingIP, that is OK'
+              Logger.debug 'Got FloatingIP, that is OK'
             else
-              Logger.notice 'no FloatingIP here, checking whether it is free'
+              Logger.notice 'No FloatingIP here, checking whether it is free'
               FloatingIP.arp_del!
               if FloatingIP.reachable?
                 Logger.notice 'FloatingIP is still up! (ICMP)'
@@ -69,7 +72,7 @@ module PortAuthority
                 else
                   Logger.notice 'FloatingIP is free :) assigning'
                   FloatingIP.handle! status_swarm
-                  Logger.notice 'updating other hosts about change'
+                  Logger.notice 'Notifying the network about change'
                   FloatingIP.update_arp!
                 end
               end
@@ -83,15 +86,15 @@ module PortAuthority
             end
           else
             # handle FloatingIP on follower
-            Logger.debug 'i am a follower'
+            Logger.debug 'I am a follower'
             if FloatingIP.up?
-              Logger.notice 'i got FloatingIP and should not, removing'
+              Logger.notice 'I got FloatingIP and should not, removing'
               FloatingIP.handle! status_swarm
               FloatingIP.arp_del!
-              Logger.notice 'updating other hosts about change'
+              Logger.notice 'Notifying the network about change'
               FloatingIP.update_arp!
             else
-              Logger.debug 'no FloatingIP here, that is OK'
+              Logger.debug 'No FloatingIP here, that is OK'
             end
             # handle LoadBalancer on follower
             if LoadBalancer.up?
@@ -107,18 +110,18 @@ module PortAuthority
 
         # remove FloatingIP on shutdown
         if FloatingIP.up?
-          Logger.notice 'removing FloatingIP'
+          Logger.notice 'Removing FloatingIP'
           FloatingIP.handle! false
           FloatingIP.update_arp!
         end
 
         # stop LB on shutdown
         if LoadBalancer.up?
-          Logger.notice 'stopping LoadBalancer'
+          Logger.notice 'Stopping LoadBalancer'
           LoadBalancer.stop!
         end
 
-        info 'exiting...'
+        Logger.notice 'Exiting...'
         exit 0
       end
 

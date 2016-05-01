@@ -8,10 +8,13 @@ module PortAuthority
 
       attr_reader :_container, :_container_def, :_image
 
-      Docker.url = Config.lbaas[:docker_endpoint]
+      def init!
+        Docker.url = Config.lbaas[:docker_endpoint]
+        Docker.options = { connect_timeout: Config.lbaas[:docker_timeout] || 10 }
+      end
 
       def container
-        @_container ||= Docker::Container.get(Config.lbaas[:lb_name])
+        @_container ||= Docker::Container.get(Config.lbaas[:name]) rescue nil
       end
 
       def image
@@ -29,8 +32,8 @@ module PortAuthority
         end
         @_container_def = {
           'Image' => self.image.json['Id'],
-          'name' => Config.lbaas[:lb_name],
-          'Hostname' => Config.lbaas[:lb_name],
+          'name' => Config.lbaas[:name],
+          'Hostname' => Config.lbaas[:name],
           'Env' => [ "ETCDCTL_ENDPOINT=#{Config.etcd[:endpoints].map { |e| "http://#{e}" }.join(',')}" ],
           'RestartPolicy' => { 'Name' => 'never' },
           'HostConfig' => {
@@ -39,7 +42,7 @@ module PortAuthority
           }
         }
         if Config.lbaas[:log_dest] != ''
-          cont_def['HostConfig']['LogConfig'] = {
+          @_container_def['HostConfig']['LogConfig'] = {
             'Type' => 'gelf',
             'Config' => {
               'gelf-address' => Config.lbaas[:log_dest],
@@ -53,7 +56,7 @@ module PortAuthority
 
       def update!
         begin
-          self.stop! && start = true if self.lb_up?
+          self.stop! && start = true if self.up?
           self.remove!
           self.pull!
           self.create!

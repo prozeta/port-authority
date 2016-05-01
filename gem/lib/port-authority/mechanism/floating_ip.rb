@@ -9,7 +9,9 @@ module PortAuthority
 
       attr_accessor :_icmp
 
-      @_icmp = Net::Ping::ICMP.new(Config.lbaas[:floating_ip])
+      def init!
+        @_icmp = Net::Ping::ICMP.new(Config.lbaas[:floating_ip])
+      end
 
       # add or remove VIP on interface
       def handle!(leader)

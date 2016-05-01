@@ -3,7 +3,9 @@
   :image: docker-registry.prz/stackdocks/haproxy:latest
   :name: stackdocks-controller
   :network: stackdocks
-  :log_dest: udp://mon1.svc.cloud.prz:515
+  # :log_dest: udp://mon1.svc.cloud.prz:515
+  :docker_endpoint: 'unix:///var/run/docker.sock'
+  :docker_timeout: 2
   :floating_ip: 10.4.1.99
   :floating_iface: eth0
   :interval: 3

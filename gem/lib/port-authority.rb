@@ -1,12 +1,4 @@
 module PortAuthority
-  module Manager
-  end
-
-  module Services
-  end
-
-  module Util
-  end
 
   module Errors
 

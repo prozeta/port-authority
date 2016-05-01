@@ -1,0 +1,9 @@
+---
+:debug: true
+:syslog: false
+:etcd:
+  :endpoints:
+    - http://ctrl1.dev3.lab.prz:2379
+    - http://ctrl2.dev3.lab.prz:2379
+    - http://ctrl3.dev3.lab.prz:2379
+  :timeout: 2

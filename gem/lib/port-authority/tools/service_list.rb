@@ -2,15 +2,13 @@ require 'optparse'
 require 'json'
 require 'yaml'
 require 'etcd-tools'
-require 'etcd-tools/etcd'
+# require 'etcd-tools/mixins'
 require 'port-authority/etcd'
 require 'port-authority/tool'
 
 module PortAuthority
   module Tools
     class ServiceList < PortAuthority::Tool
-      include EtcdTools::Etcd
-      include PortAuthority::Etcd
 
       attr_reader :etcd
 
@@ -62,18 +60,15 @@ module PortAuthority
         end.parse!
       end
 
-      def initialize
-        self.optparse
-        @network = ARGV.pop
-        unless @network
+      def run
+        unless @ARGS[0]
           $stderr.puts 'Missing NETWORK_NAME!'
           exit 1
         end
-        @etcd = PortAuthority::Etcd
-      end
 
-      def run
-        services = list_services(@etcd, @network, @options[:service_filter])
+        @etcd = PortAuthority::Etcd.shell_cluster_connect(@options[:url])
+
+        services = @etcd.swarm_list_services(@ARGS[0], @options[:service_filter])
 
         if @options[:output_yaml]
           puts services.to_yaml

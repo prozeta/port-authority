@@ -1,7 +1,7 @@
 require 'timeout'
 require 'digest/sha2'
 require 'json'
-require 'etcd-tools'
+require 'yaml'
 require 'port-authority'
 require 'port-authority/config'
 require 'port-authority/logger'

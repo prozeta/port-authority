@@ -4,10 +4,11 @@ require 'yaml'
 require 'etcd-tools'
 require 'etcd-tools/etcd'
 require 'port-authority/etcd'
+require 'port-authority/tool'
 
 module PortAuthority
   module Tools
-    class ServiceList
+    class ServiceList < PortAuthority::Tool
       include EtcdTools::Etcd
       include PortAuthority::Etcd
 

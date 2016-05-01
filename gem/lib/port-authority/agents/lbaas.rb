@@ -1,5 +1,4 @@
 # rubocop:disable MethodLength, CyclomaticComplexity, Metrics/BlockNesting, Metrics/LineLength, Metrics/AbcSize, Metrics/PerceivedComplexity
-require 'ipaddr'
 require 'socket'
 require 'port-authority/agent'
 require 'port-authority/mechanism/load_balancer'
@@ -11,43 +10,33 @@ module PortAuthority
 
       def run
         setup daemonize: Config.daemonize, nice: -10, root: true
-
         Signal.trap('USR2') { @lb_update_hook = true }
         @status_swarm = false
         @status_icmp = false
+        @etcd = PortAuthority::Etcd.cluster_connect Config.etcd
 
-        @etcd = EtcdTools::Etcd
-
-        thr_create(:icmp, Config.icmp[:interval]) do
-          Logger.debug 'checking state by ICMP echo'
-          status = FloatingIP.alive?
-          thr_safe { @status_icmp = status }
-          Logger.debug "VIP is #{status ? 'alive' : 'down'} according to ICMP"
-        end
-
-        thr_create(:swarm, Config.etcd[:interval]) do
+        thr_create(:swarm, Config.lbaas[:swarm_interval] || Config.lbaas[:interval]) do
           begin
             Logger.debug 'checking swarm state'
             status = @etcd.am_i_swarm_leader?
             thr_safe { @status_swarm = status }
             Logger.debug "i am #{status ? '' : 'NOT' } the swarm leader"
-          rescue PortAuthority::Errors::ETCDConnectFailed => e
-            Logger.error [ e.class e.message ].join(': ')
+          rescue StandardError => e
+            Logger.error [ e.class, e.message ].join(': ')
             Logger.error "  connection: " + e.etcd.to_s
             Logger.error "  #{e.backtrace.to_s}"
             thr_safe { @status_swarm = false }
-            sleep Config.etcd[:interval]
+            sleep(Config.lbaas[:swarm_interval] || Config.lbaas[:interval])
             retry unless exit?
           end
         end
 
         thr_start
 
-        LoadBalancer.docker_setup! || end!
-        LoadBalancer.create!
+        LoadBalancer.get || LoadBalancer.create!
 
         Logger.debug 'waiting for threads to gather something...'
-        sleep Config.vip[:interval]
+        sleep Config.lbaas[:interval]
         first_cycle = true
         status_time = Time.now.to_i - 60
 
@@ -58,68 +47,74 @@ module PortAuthority
             LoadBalancer.update!
             Logger.notice 'LoadBalancer image update finished'
           end
-          sleep Config.vip[:interval]
+          sleep Config.lbaas[:interval]
           thr_safe(:icmp) { status_icmp = @status_icmp }
           thr_safe(:swarm) { status_swarm = @status_swarm }
+          # main logic
           if status_swarm
-            Logger.debug 'i am the leader'
+            # handle FloatingIP on leader
+            Logger.debug 'i am the LEADER'
             if FloatingIP.up?
-              Logger.debug 'got VIP, that is OK'
+              Logger.debug 'got FloatingIP, that is OK'
             else
-              Logger.info 'no VIP here, checking whether it is free'
+              Logger.notice 'no FloatingIP here, checking whether it is free'
               FloatingIP.arp_del!
               if FloatingIP.reachable?
-                Logger.info 'VIP is still up! (ICMP)'
+                Logger.notice 'FloatingIP is still up! (ICMP)'
               else
-                Logger.info 'VIP is unreachable by ICMP, checking for duplicates on L2'
+                Logger.info 'FloatingIP is unreachable by ICMP, checking for duplicates on L2'
                 FloatingIP.arp_del!
                 if FloatingIP.duplicate?
-                  Logger.error 'VIP is still assigned! (ARP)'
+                  Logger.error 'FloatingIP is still assigned! (ARP)'
                 else
-                  Logger.notice 'VIP is free :) assigning'
+                  Logger.notice 'FloatingIP is free :) assigning'
                   FloatingIP.handle! status_swarm
                   Logger.notice 'updating other hosts about change'
                   FloatingIP.update_arp!
                 end
               end
             end
+            # handle LoadBalancer on leader
             if LoadBalancer.up?
-              Logger.debug 'load-balancer is up, that is OK'
+              Logger.debug 'LoadBalancer is up, that is OK'
             else
-              Logger.notice 'load-balancer is down, starting'
+              Logger.notice 'LoadBalancer is down, starting'
               LoadBalancer.start!
             end
           else
-            Logger.debug 'i am not the leader'
+            # handle FloatingIP on follower
+            Logger.debug 'i am a follower'
             if FloatingIP.up?
-              Logger.notice 'i got VIP and should not, removing'
+              Logger.notice 'i got FloatingIP and should not, removing'
               FloatingIP.handle! status_swarm
+              FloatingIP.arp_del!
               Logger.notice 'updating other hosts about change'
               FloatingIP.update_arp!
             else
-              Logger.debug 'no VIP here, that is OK'
+              Logger.debug 'no FloatingIP here, that is OK'
             end
+            # handle LoadBalancer on follower
             if LoadBalancer.up?
-              Logger.notice 'load-balancer is up, stopping'
+              Logger.notice 'LoadBalancer is up, stopping'
               LoadBalancer.stop!
             else
-              Logger.debug 'load-balancer is down, that is OK'
+              Logger.debug 'LoadBalancer is down, that is OK'
             end
-          end
+          end # logic end
         end
 
         thr_wait
 
-        # remove VIP on shutdown
+        # remove FloatingIP on shutdown
         if FloatingIP.up?
-          Logger.notice 'removing VIP'
+          Logger.notice 'removing FloatingIP'
           FloatingIP.handle! false
           FloatingIP.update_arp!
         end
 
         # stop LB on shutdown
         if LoadBalancer.up?
-          Logger.notice 'stopping load-balancer'
+          Logger.notice 'stopping LoadBalancer'
           LoadBalancer.stop!
         end
 

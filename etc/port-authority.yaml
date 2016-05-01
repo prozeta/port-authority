@@ -1,0 +1,9 @@
+---
+:debug: true
+:syslog: false
+:etcd:
+  :endpoints:
+    - http://pa1:2379
+    - http://pa2:2379
+    - http://pa3:2379
+  :timeout: 2

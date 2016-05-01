@@ -3,13 +3,13 @@ require 'json'
 require 'yaml'
 require 'etcd-tools'
 require 'etcd-tools/etcd'
-require 'port-authority/util/etcd'
+require 'port-authority/etcd'
 
 module PortAuthority
-  module Services
-    class App
-      include PortAuthority::Util::Etcd
+  module Tools
+    class ServiceList
       include EtcdTools::Etcd
+      include PortAuthority::Etcd
 
       attr_reader :etcd
 
@@ -65,10 +65,10 @@ module PortAuthority
         self.optparse
         @network = ARGV.pop
         unless @network
-          $stderr.puts "Missing NETWORK_NAME!"
+          $stderr.puts 'Missing NETWORK_NAME!'
           exit 1
         end
-        @etcd = etcd_connect @options[:url]
+        @etcd = PortAuthority::Etcd
       end
 
       def run
@@ -80,7 +80,7 @@ module PortAuthority
           puts services.to_json
         else
           if @options[:ip_only]
-            services.each { |name, params| puts "#{params['ip']}" }
+            services.each { |_, params| puts params['ip'] }
           elsif @options[:ports]
             services.each do |name, params|
               params['ports'].each do |port|

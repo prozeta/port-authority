@@ -1,8 +1,8 @@
-description     "PortAuthority HA manager"
+description     "PortAuthority LBaaS Agent"
 start on docker and etcd
 stop on runlevel [06]
 respawn
 setuid root
 setgid root
 console log
-exec /usr/local/bin/pa-manager
+exec /usr/local/bin/pa-lbaas-agent

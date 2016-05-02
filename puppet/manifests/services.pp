@@ -23,7 +23,7 @@ class portauthority::services () {
         depends => [ 'swarm-agent' ],
         require => Docker::Run['swarm-agent']
       } ->
-      service { 'pa-manager':
+      service { 'pa-lbaas-agent':
         ensure     => running,
         enable     => true,
       }

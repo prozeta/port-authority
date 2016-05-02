@@ -1,0 +1,15 @@
+---
+:lbaas:
+  :floating_ip: <%= scope['portauthority::floating_ip'] %>
+  :floating_iface: <%= scope['portauthority::floating_ip_iface'] %>
+  :image: <%= scope['portauthority::lb_image'] %>
+  :name: <%= scope['portauthority::lb_name'] %>
+  :network: <%= scope['portauthority::lb_network'] %>
+  :log_dest: <%= scope['portauthority::lb_log_destination'] %>
+  :docker_endpoint: 'unix:///var/run/docker.sock'
+  :docker_timeout: 5
+  :interval: 3
+  :swarm_interval: 2
+  :icmp_count: 3
+  :arping_count: 2
+  :arping_wait: 2

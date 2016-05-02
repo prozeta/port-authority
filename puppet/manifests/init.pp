@@ -36,6 +36,7 @@ class portauthority (
   $host_fqdn = $::fqdn,
   $lb_image = 'prozeta/pa-haproxy:latest',
   $lb_name = 'pa-loadbalancer',
+  $lb_network = 'portauthority',
   $lb_log_destination = '',
   $docker_listen_ip = '',
   $default_bridge_ip = '192.168.255.1/24',
@@ -103,6 +104,7 @@ class portauthority (
 
   class { 'portauthority::tools': } ->
   class { 'portauthority::images': } ->
+  class { 'portauthority::agents': } ->
   class { 'portauthority::services': } ->
   class { 'portauthority::network': }
 

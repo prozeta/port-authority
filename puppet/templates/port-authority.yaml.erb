@@ -2,7 +2,7 @@
 endpoints = scope['portauthority::cluster_members'].empty? ? ['localhost'] : scope['portauthority::cluster_members']
 -%>
 ---
-:debug: false
+:debug: <%= scope['portauthority::debug'] %>
 :syslog: true
 :etcd:
   :endpoints:

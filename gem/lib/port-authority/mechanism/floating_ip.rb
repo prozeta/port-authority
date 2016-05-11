@@ -23,7 +23,6 @@ module PortAuthority
 
       # send gratuitous ARP to the network
       def arp_update!
-        # return true if shellcmd Config.commands[:arping], '-U', '-q', '-c', Config.lbaas[:arping_count], '-I', Config.lbaas[:floating_iface], Config.lbaas[:floating_ip]
         return true if shellcmd Config.commands[:arping], '-U', '-q', '-c', Config.lbaas[:arping_count], '-I', Config.lbaas[:floating_iface], Config.lbaas[:floating_ip]
 
         false
@@ -58,6 +57,7 @@ module PortAuthority
         Logger.debug "Executing shellcommand #{cksum} - #{cmd}"
         ret = system cmd
         Logger.debug "Shellcommand #{cksum} returned #{ret.to_s}"
+        return ret
       end
 
     end

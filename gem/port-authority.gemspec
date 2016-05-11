@@ -1,11 +1,11 @@
 Gem::Specification.new do |s|
   s.name                  = 'port-authority'
-  s.version               = '0.5.3'
+  s.version               = '0.5.4'
   s.date                  = Time.now.strftime('%Y-%m-%d')
   s.summary               = 'Port Authority'
   s.description           = 'Highly opinionated PaaS based on Docker Swarm and ETCD'
   s.authors               = ["Radek 'blufor' Slavicinsky", "Tomas 'arteal' Hejatko", "Jan 'liquid' Kaufman"]
-  s.email                 = 'cloud@prozeta.eu'
+  s.email                 = 'devops@prozeta.eu'
   s.files                 = Dir['lib/**/*.rb']
   s.executables           = Dir['bin/*'].map { |f| f.split('/').last }
   s.homepage              = 'https://github.com/prozeta/port-authority'

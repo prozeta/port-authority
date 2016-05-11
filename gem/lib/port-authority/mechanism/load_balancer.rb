@@ -35,7 +35,7 @@ module PortAuthority
           'Image' => self.image.json['Id'],
           'name' => Config.lbaas[:name],
           'Hostname' => Config.lbaas[:name],
-          'Env' => [ "ETCDCTL_ENDPOINT=#{Config.etcd[:endpoints].map { |e| "http://#{e}" }.join(',')}" ],
+          'Env' => [ "ETCDCTL_ENDPOINT=#{Config.etcd[:endpoints].join(',')}" ],
           'RestartPolicy' => { 'Name' => 'never' },
           'HostConfig' => {
             'PortBindings' => port_bindings,

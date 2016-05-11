@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = 'port-authority'
-  s.version               = '0.5.2'
+  s.version               = '0.5.3'
   s.date                  = Time.now.strftime('%Y-%m-%d')
   s.summary               = 'Port Authority'
   s.description           = 'Highly opinionated PaaS based on Docker Swarm and ETCD'

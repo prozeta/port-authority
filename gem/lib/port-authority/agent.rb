@@ -45,7 +45,7 @@ module PortAuthority
       args[:root] ||= false
       args[:daemonize] ||= false
       args[:nice] ||= 0
-      Logger.init! @@_semaphores[:log]
+      Logger.init! @@_semaphores[:log], name
       Logger.info 'Starting main thread'
       Logger.debug 'Setting process name'
       if RUBY_VERSION >= '2.1'

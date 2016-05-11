@@ -6,10 +6,10 @@ module PortAuthority
 
     extend self
 
-    def init!(s)
+    def init!(s,n)
       @_s = s
       @debug = Config.debug
-      Syslog.open($0, Syslog::LOG_PID, Syslog::LOG_DAEMON) if Config.syslog
+      Syslog.open("pa-#{n}-agent", Syslog::LOG_PID, Syslog::LOG_DAEMON) if Config.syslog
     end
 
     def debug!

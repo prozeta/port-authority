@@ -1,5 +1,4 @@
 require 'timeout'
-require 'digest/sha2'
 require 'json'
 require 'yaml'
 require 'port-authority'
@@ -144,15 +143,6 @@ module PortAuthority
     def thr_wait(name=nil)
       return @@_threads[name].join if name
       @@_threads.each_value(&:join)
-    end
-
-    # Run command in Bash.
-    def shellcmd(*args)
-      cmd = args.join(' ').to_s
-      cksum = Digest::SHA256.hexdigest(args.join.to_s)[0..15]
-      Logger.debug "Executing shellcommand #{cksum} - #{cmd}"
-      ret = system cmd
-      Logger.debug "Shellcommand #{cksum} returned #{ret.to_s}"
     end
 
     # Return hostname.

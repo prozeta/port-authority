@@ -36,7 +36,6 @@ module PortAuthority
 
         FloatingIP.init!
         LoadBalancer.init!
-        LoadBalancer.container || ( LoadBalancer.pull! && LoadBalancer.create! )
 
         Logger.debug 'Waiting for threads to gather something...'
         sleep Config.lbaas[:interval]
@@ -73,7 +72,7 @@ module PortAuthority
                   Logger.notice 'FloatingIP is free :) assigning'
                   FloatingIP.handle! status_swarm
                   Logger.notice 'Notifying the network about change'
-                  FloatingIP.update_arp!
+                  FloatingIP.arp_update!
                 end
               end
             end

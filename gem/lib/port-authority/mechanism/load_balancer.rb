@@ -11,6 +11,7 @@ module PortAuthority
       def init!
         Docker.url = Config.lbaas[:docker_endpoint]
         Docker.options = { connect_timeout: Config.lbaas[:docker_timeout] || 10 }
+        self.container || ( self.pull! && self.create! )
       end
 
       def container
@@ -56,7 +57,7 @@ module PortAuthority
 
       def update!
         begin
-          self.stop! && start = true if self.up?
+          ( self.stop! && start = true ) if self.up?
           self.remove!
           self.pull!
           self.create!
@@ -69,19 +70,19 @@ module PortAuthority
       end
 
       def remove!
-        self.container.delete
+        @_container.delete
       end
 
       def up?
-        self.container.json['State']['Running']
+        @_container.json['State']['Running']
       end
 
       def start!
-        self.container.start
+        @_container.start
       end
 
       def stop!
-        self.container.stop
+        @_container.stop
       end
 
     end

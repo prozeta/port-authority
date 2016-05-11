@@ -1,5 +1,6 @@
 # rubocop:disable Metrics/LineLength, Metrics/AbcSize
 require 'net/ping'
+require 'digest/sha2'
 
 module PortAuthority
   module Mechanism
@@ -11,17 +12,20 @@ module PortAuthority
 
       def init!
         @_icmp = Net::Ping::ICMP.new(Config.lbaas[:floating_ip])
+        Logger.debug(Config.lbaas.to_yaml)
       end
 
       # add or remove VIP on interface
       def handle!(leader)
-        return true if shellcmd Config.commands[:iproute], 'address', leader ? 'add' : 'delete', "#{Config.lbaas[:floating_ip]}/32", 'dev', Config.lbaas[:interface], '>/dev/null 2>&1'
+        return true if shellcmd Config.commands[:iproute], 'address', leader ? 'add' : 'delete', "#{Config.lbaas[:floating_ip]}/32", 'dev', Config.lbaas[:floating_iface], '>/dev/null 2>&1'
         false
       end
 
       # send gratuitous ARP to the network
       def arp_update!
-        return true if shellcmd Config.commands[:arping], '-U', '-q', '-c', Config.lbaas[:arping_count], '-I', Config.lbaas[:interface], Config.lbaas[:floating_ip]
+        # return true if shellcmd Config.commands[:arping], '-U', '-q', '-c', Config.lbaas[:arping_count], '-I', Config.lbaas[:floating_iface], Config.lbaas[:floating_ip]
+        return true if shellcmd Config.commands[:arping], '-U', '-q', '-c', Config.lbaas[:arping_count], '-I', Config.lbaas[:floating_iface], Config.lbaas[:floating_ip]
+
         false
       end
 
@@ -43,9 +47,19 @@ module PortAuthority
 
       # check whether the IP is registered anywhere
       def duplicate?
-        return true if shellcmd Config.commands[:arping], '-D', '-q', '-c', Config.lbaas[:arping_count], '-w', Config.lbaas[:arping_wait], '-I', Config.lbaas[:interface], Config.lbaas[:floating_ip]
-        false
+        return false if shellcmd Config.commands[:arping], '-D', '-q', '-c', Config.lbaas[:arping_count], '-w', Config.lbaas[:arping_wait], '-I', Config.lbaas[:floating_iface], Config.lbaas[:floating_ip]
+        true
       end
+
+      private
+      def shellcmd(*args)
+        cmd = args.join(' ').to_s
+        cksum = Digest::SHA256.hexdigest(args.join.to_s)[0..15]
+        Logger.debug "Executing shellcommand #{cksum} - #{cmd}"
+        ret = system cmd
+        Logger.debug "Shellcommand #{cksum} returned #{ret.to_s}"
+      end
+
     end
   end
 end

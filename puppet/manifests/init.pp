@@ -38,6 +38,7 @@ class portauthority (
   $lb_name = 'pa-loadbalancer',
   $lb_network = 'portauthority',
   $lb_log_destination = '',
+  $lb_section = 'default',
   $docker_listen_ip = '',
   $default_bridge_ip = '192.168.255.1/24',
   $gwbridge_network = '192.168.254.0/24',

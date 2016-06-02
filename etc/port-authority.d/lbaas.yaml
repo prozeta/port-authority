@@ -3,7 +3,7 @@
   :image: docker-registry.prz/stackdocks/haproxy:latest
   :name: stackdocks-controller
   :network: stackdocks
-  :section: default
+  :env: 'vendor=portauthority'
   # :log_dest: udp://mon1.svc.cloud.prz:515
   :docker_endpoint: 'unix:///var/run/docker.sock'
   :docker_timeout: 2

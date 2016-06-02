@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name                  = 'port-authority'
+  s.name                  = 'port-authority-prz'
   s.version               = '0.5.4'
   s.date                  = Time.now.strftime('%Y-%m-%d')
   s.summary               = 'Port Authority'

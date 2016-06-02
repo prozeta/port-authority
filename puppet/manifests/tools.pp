@@ -11,7 +11,7 @@ class portauthority::tools {
     provider => 'gem',
   } ->
 
-  package { 'port-authority':
+  package { 'port-authority-prz':
     ensure   => latest,
     provider => 'gem',
   }

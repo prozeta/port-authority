@@ -27,6 +27,9 @@ class portauthority::services () {
         ensure     => running,
         enable     => true,
       } ->
+      file { '/srv/cron':
+        ensure => directory,
+      } ->
       service { 'pa-cron-agent':
         ensure     => running,
         enable     => true,

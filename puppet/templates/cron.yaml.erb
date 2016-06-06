@@ -5,6 +5,7 @@
   :network: <%= scope['portauthority::cron_network'] %>
   :env: <%= scope['portauthority::cron_env'] %>
   :log_dest: <%= scope['portauthority::cron_log_destination'] %>
+  :folder: '/srv/cron:/var/lib/cron'
   :docker_endpoint: 'unix:///var/run/docker.sock'
   :docker_timeout: 2
   :interval: 3

@@ -37,7 +37,7 @@ class portauthority::agents {
     content => template('portauthority/cron.yaml.erb'),
   }
 
-  file { '/etc/init/pa-lbaas-cron.conf':
+  file { '/etc/init/pa-cron-agent.conf':
     ensure    => file,
     mode      => '0644',
     owner     => 'root',

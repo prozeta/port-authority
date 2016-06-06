@@ -1,0 +1,8 @@
+description     "PortAuthority Cron container Agent"
+start on docker and etcd
+stop on runlevel [06]
+respawn
+setuid root
+setgid root
+console log
+exec /usr/local/bin/pa-cron-agent

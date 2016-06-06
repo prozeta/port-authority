@@ -26,7 +26,11 @@ class portauthority::services () {
       service { 'pa-lbaas-agent':
         ensure     => running,
         enable     => true,
-      }
+      } ->
+      service { 'pa-cron-agent':
+        ensure     => running,
+        enable     => true,
+      } ->
     }
 
 

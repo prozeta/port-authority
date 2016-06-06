@@ -29,4 +29,19 @@ class portauthority::agents {
     owner     => 'root',
     source    => 'puppet:///modules/portauthority/pa-lbaas-agent.upstart',
   }
+
+  file { '/etc/port-authority.d/cron.yaml':
+    ensure  => file,
+    mode    => '0600',
+    owner   => 'root',
+    content => template('portauthority/cron.yaml.erb'),
+  }
+
+  file { '/etc/init/pa-lbaas-cron.conf':
+    ensure    => file,
+    mode      => '0644',
+    owner     => 'root',
+    source    => 'puppet:///modules/portauthority/pa-cron-agent.upstart',
+  }
+
 }

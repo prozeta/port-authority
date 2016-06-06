@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'port-authority/agents/cronsvc'
+PortAuthority::Agents::CronSvc.new

@@ -1,0 +1,11 @@
+---
+:cron:
+  :image: <%= scope['portauthority::cron_image'] %>
+  :name: <%= scope['portauthority::cron_name'] %>
+  :network: <%= scope['portauthority::cron_network'] %>
+  :env: <%= scope['portauthority::cron_env'] %>
+  :log_dest: <%= scope['portauthority::cron_log_destination'] %>
+  :docker_endpoint: 'unix:///var/run/docker.sock'
+  :docker_timeout: 2
+  :interval: 3
+  :swarm_interval: 2

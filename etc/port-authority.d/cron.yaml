@@ -1,0 +1,11 @@
+---
+:cron:
+  :image: docker-registry.prz/stackdocks/cron:latest
+  :name: cron
+  :network: stackdocks
+  :env: 'vendor=portauthority'
+  # :log_dest: udp://mon1.svc.cloud.prz:515
+  :docker_endpoint: 'unix:///var/run/docker.sock'
+  :docker_timeout: 2
+  :interval: 3
+  :swarm_interval: 2

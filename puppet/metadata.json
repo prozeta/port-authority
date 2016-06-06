@@ -1,6 +1,6 @@
 {
   "name": "prozeta/portauthority",
-  "version": "0.5.29",
+  "version": "0.5.31",
   "author": "Radek blufor Slavicinsky",
   "license": "GPL-2.0",
   "summary": "Puppet module to bootstrap Port Authority",

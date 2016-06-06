@@ -30,7 +30,7 @@ class portauthority::services () {
       service { 'pa-cron-agent':
         ensure     => running,
         enable     => true,
-      } ->
+      }
     }
 
 
